@@ -67,6 +67,7 @@ export const ExcelImportDialog = ({ onImport }: ExcelImportDialogProps) => {
           date: row.Date ? new Date(row.Date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           fileNumber: row['File Number'] || row['File #'] || '',
           clientName: row['Client Name'] || row.Client || '',
+          peril: row.Peril || null,
           severity: row.Severity ? parseInt(row.Severity) as 1 | 2 | 3 | 4 | 5 : null,
           timeHours: convertTimeToHours(row['Time on File'] || row.Time || ''),
           revisionTimeHours: convertTimeToHours(row['Revision Time'] || ''),

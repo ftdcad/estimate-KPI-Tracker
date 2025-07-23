@@ -1,8 +1,24 @@
+export const PERIL_OPTIONS = [
+  'Wind',
+  'Hail', 
+  'Hurricane',
+  'Flood',
+  'Fire',
+  'Water',
+  'Lightning',
+  'Theft',
+  'Vandalism',
+  'Other'
+] as const;
+
+export type PerilType = typeof PERIL_OPTIONS[number];
+
 export interface EstimateEntry {
   id: string;
   date: string;
   fileNumber: string;
   clientName: string;
+  peril: PerilType | null;
   severity: 1 | 2 | 3 | 4 | 5 | null;
   timeHours: number | null;
   revisionTimeHours: number | null;

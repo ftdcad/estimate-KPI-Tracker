@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, Plus, Calculator } from 'lucide-react';
-import { EstimateEntry } from '../../types/kpi';
+import { EstimateEntry, PERIL_OPTIONS } from '../../types/kpi';
 import { toast } from '@/hooks/use-toast';
 import { PersonalStatsCard } from './PersonalStatsCard';
 
@@ -37,6 +37,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       date: new Date().toISOString().split('T')[0],
       fileNumber: '',
       clientName: '',
+      peril: null,
       severity: null,
       timeHours: null,
       revisionTimeHours: null,
@@ -131,6 +132,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                 <th className="border border-border p-2 w-24">Date</th>
                 <th className="border border-border p-2 w-32">File Number</th>
                 <th className="border border-border p-2 w-40">Client Name</th>
+                <th className="border border-border p-2 w-28">Peril</th>
                 <th className="border border-border p-2 w-20">Severity</th>
                 <th className="border border-border p-2 w-24">Time (hrs)</th>
                 <th className="border border-border p-2 w-24">Rev Time</th>
@@ -172,6 +174,23 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       className="border-0 h-8"
                       placeholder="Client name"
                     />
+                  </td>
+                  <td className="border border-border p-1">
+                    <Select
+                      value={entry.peril || ''}
+                      onValueChange={(value) => updateEntry(index, 'peril', value || null)}
+                    >
+                      <SelectTrigger className="border-0 h-8">
+                        <SelectValue placeholder="" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PERIL_OPTIONS.map((peril) => (
+                          <SelectItem key={peril} value={peril}>
+                            {peril}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </td>
                   <td className="border border-border p-1">
                     <Select
