@@ -60,36 +60,41 @@ const EstimatorKPITracker: React.FC = () => {
   const weekRange = getCurrentWeekDateRange();
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-secondary">
       {/* Header */}
-      <div className="bg-primary text-primary-foreground p-4">
-        <h1 className="text-xl font-semibold">
-          Estimator KPI Tracking System - Coastal Claim Services
-        </h1>
+      <div className="bg-gradient-primary text-white p-6 shadow-medium">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold">
+            Estimator KPI Tracking System
+          </h1>
+          <p className="text-white/90 text-lg mt-2">
+            Coastal Claim Services
+          </p>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="p-6">
-        <Card className="mb-6">
+        <Card className="mb-6 bg-gradient-card shadow-medium border-0">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg">
+            <CardTitle className="text-xl text-primary">
               Week of {weekRange.start} - {weekRange.end}, 2025
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-base">
               Performance tracking for the estimating department
             </CardDescription>
           </CardHeader>
         </Card>
 
         <Tabs defaultValue="nell-entry" className="w-full">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="nell-entry">Nell - Current Week</TabsTrigger>
-            <TabsTrigger value="brandon-entry">Brandon - Current Week</TabsTrigger>
-            <TabsTrigger value="historical">Historical Data</TabsTrigger>
-            <TabsTrigger value="scorecards">Estimator Scorecards</TabsTrigger>
-            <TabsTrigger value="team-dashboard">Team Dashboard</TabsTrigger>
-            <TabsTrigger value="analysis">Analysis</TabsTrigger>
-            <TabsTrigger value="documentation">Documentation</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-7 bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1">
+            <TabsTrigger value="nell-entry" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Nell - Current Week</TabsTrigger>
+            <TabsTrigger value="brandon-entry" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Brandon - Current Week</TabsTrigger>
+            <TabsTrigger value="historical" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Historical Data</TabsTrigger>
+            <TabsTrigger value="scorecards" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Estimator Scorecards</TabsTrigger>
+            <TabsTrigger value="team-dashboard" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Team Dashboard</TabsTrigger>
+            <TabsTrigger value="analysis" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Analysis</TabsTrigger>
+            <TabsTrigger value="documentation" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Documentation</TabsTrigger>
           </TabsList>
 
           <TabsContent value="nell-entry">
