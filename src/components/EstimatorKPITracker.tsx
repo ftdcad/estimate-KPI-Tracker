@@ -225,7 +225,7 @@ const EstimatorKPITracker: React.FC = () => {
                 value={`${getEstimatorKey(estimatorName)}-entry`} 
                 className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft"
               >
-                {estimatorName} - Current Week
+                {estimatorName}
               </TabsTrigger>
             ))}
             <TabsTrigger value="historical" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Historical Data</TabsTrigger>
