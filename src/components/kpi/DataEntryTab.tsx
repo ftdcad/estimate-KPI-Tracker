@@ -186,8 +186,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="number"
-                      step="0.1"
+                      type="text"
                       value={entry.timeHours ?? ''}
                       onChange={(e) => updateEntry(index, 'timeHours', e.target.value ? parseFloat(e.target.value) : null)}
                       className="border-0 h-8 text-right"
@@ -196,8 +195,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="number"
-                      step="0.1"
+                      type="text"
                       value={entry.revisionTimeHours ?? ''}
                       onChange={(e) => updateEntry(index, 'revisionTimeHours', e.target.value ? parseFloat(e.target.value) : null)}
                       className="border-0 h-8 text-right"
@@ -206,7 +204,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="number"
+                      type="text"
                       value={entry.estimateValue ?? ''}
                       onChange={(e) => updateEntry(index, 'estimateValue', e.target.value ? parseFloat(e.target.value) : null)}
                       className="border-0 h-8 text-right"
@@ -215,7 +213,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="number"
+                      type="text"
                       value={entry.revisions ?? ''}
                       onChange={(e) => updateEntry(index, 'revisions', e.target.value ? parseInt(e.target.value) : null)}
                       className="border-0 h-8 text-right"
