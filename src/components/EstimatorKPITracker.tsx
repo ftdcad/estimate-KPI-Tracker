@@ -8,7 +8,7 @@ import TeamDashboard from './kpi/TeamDashboard';
 import AnalysisTab from './kpi/AnalysisTab';
 import HistoricalData from './kpi/HistoricalData';
 import Documentation from './kpi/Documentation';
-import AddEstimatorDialog from './kpi/AddEstimatorDialog';
+import ManageEstimatorDialog from './kpi/ManageEstimatorDialog';
 import { EstimateEntry, KPIData } from '../types/kpi';
 
 const EstimatorKPITracker: React.FC = () => {
@@ -68,6 +68,71 @@ const EstimatorKPITracker: React.FC = () => {
     }));
   };
 
+  const editEstimator = (oldName: string, newName: string) => {
+    const oldKey = oldName.toLowerCase().replace(/\s+/g, '');
+    const newKey = newName.toLowerCase().replace(/\s+/g, '');
+    
+    setKPIData(prev => {
+      const newEstimators = { ...prev.estimators };
+      const newHistoricalData = { ...prev.historicalData };
+      
+      // Move data from old key to new key
+      if (newEstimators[oldKey]) {
+        newEstimators[newKey] = newEstimators[oldKey];
+        delete newEstimators[oldKey];
+      }
+      
+      // Update historical data keys
+      Object.keys(newHistoricalData).forEach(week => {
+        if (newHistoricalData[week][oldKey]) {
+          newHistoricalData[week][newKey] = newHistoricalData[week][oldKey];
+          delete newHistoricalData[week][oldKey];
+        }
+      });
+      
+      // Update estimator list
+      const newEstimatorList = prev.estimatorList.map(name => 
+        name === oldName ? newName : name
+      );
+      
+      return {
+        ...prev,
+        estimators: newEstimators,
+        historicalData: newHistoricalData,
+        estimatorList: newEstimatorList
+      };
+    });
+  };
+
+  const removeEstimator = (estimatorName: string) => {
+    const estimatorKey = estimatorName.toLowerCase().replace(/\s+/g, '');
+    
+    setKPIData(prev => {
+      const newEstimators = { ...prev.estimators };
+      const newHistoricalData = { ...prev.historicalData };
+      
+      // Remove estimator data
+      delete newEstimators[estimatorKey];
+      
+      // Remove from historical data
+      Object.keys(newHistoricalData).forEach(week => {
+        if (newHistoricalData[week][estimatorKey]) {
+          delete newHistoricalData[week][estimatorKey];
+        }
+      });
+      
+      // Remove from estimator list
+      const newEstimatorList = prev.estimatorList.filter(name => name !== estimatorName);
+      
+      return {
+        ...prev,
+        estimators: newEstimators,
+        historicalData: newHistoricalData,
+        estimatorList: newEstimatorList
+      };
+    });
+  };
+
   const getEstimatorKey = (estimatorName: string) => {
     return estimatorName.toLowerCase().replace(/\s+/g, '');
   };
@@ -114,9 +179,11 @@ const EstimatorKPITracker: React.FC = () => {
 
         <div className="flex justify-between items-center mb-6">
           <div></div>
-          <AddEstimatorDialog
+          <ManageEstimatorDialog
             existingEstimators={kpiData.estimatorList}
             onAddEstimator={addEstimator}
+            onEditEstimator={editEstimator}
+            onRemoveEstimator={removeEstimator}
           />
         </div>
 
