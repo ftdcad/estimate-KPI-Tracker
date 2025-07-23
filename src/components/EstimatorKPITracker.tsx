@@ -9,6 +9,7 @@ import AnalysisTab from './kpi/AnalysisTab';
 import HistoricalData from './kpi/HistoricalData';
 import Documentation from './kpi/Documentation';
 import ManageEstimatorDialog from './kpi/ManageEstimatorDialog';
+import { ExcelImportDialog } from './kpi/ExcelImportDialog';
 import { EstimateEntry, KPIData } from '../types/kpi';
 
 const EstimatorKPITracker: React.FC = () => {
@@ -179,12 +180,15 @@ const EstimatorKPITracker: React.FC = () => {
 
         <div className="flex justify-between items-center mb-6">
           <div></div>
-          <ManageEstimatorDialog
-            existingEstimators={kpiData.estimatorList}
-            onAddEstimator={addEstimator}
-            onEditEstimator={editEstimator}
-            onRemoveEstimator={removeEstimator}
-          />
+          <div className="flex gap-2">
+            <ExcelImportDialog onImport={updateEstimatorData} />
+            <ManageEstimatorDialog
+              existingEstimators={kpiData.estimatorList}
+              onAddEstimator={addEstimator}
+              onEditEstimator={editEstimator}
+              onRemoveEstimator={removeEstimator}
+            />
+          </div>
         </div>
 
         <Tabs defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} className="w-full">
