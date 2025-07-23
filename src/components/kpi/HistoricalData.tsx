@@ -11,7 +11,12 @@ interface HistoricalDataProps {
 }
 
 const HistoricalData: React.FC<HistoricalDataProps> = ({ kpiData }) => {
-  const [selectedEstimator, setSelectedEstimator] = useState('nell');
+  const getEstimatorKey = (estimatorName: string) => {
+    return estimatorName.toLowerCase().replace(/\s+/g, '');
+  };
+
+  const firstEstimatorKey = kpiData.estimatorList.length > 0 ? getEstimatorKey(kpiData.estimatorList[0]) : 'nell';
+  const [selectedEstimator, setSelectedEstimator] = useState(firstEstimatorKey);
   const [selectedWeek, setSelectedWeek] = useState('');
   const [loadedData, setLoadedData] = useState<EstimateEntry[] | null>(null);
 
@@ -112,8 +117,11 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({ kpiData }) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="nell">Nell</SelectItem>
-                  <SelectItem value="brandon">Brandon</SelectItem>
+                  {kpiData.estimatorList.map((estimatorName) => (
+                    <SelectItem key={getEstimatorKey(estimatorName)} value={getEstimatorKey(estimatorName)}>
+                      {estimatorName}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -148,7 +156,7 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({ kpiData }) => {
         <Card>
           <CardHeader>
             <CardTitle>
-              Historical Data - {selectedEstimator.charAt(0).toUpperCase() + selectedEstimator.slice(1)} - 
+              Historical Data - {kpiData.estimatorList.find(name => getEstimatorKey(name) === selectedEstimator) || selectedEstimator.charAt(0).toUpperCase() + selectedEstimator.slice(1)} - 
               Week of {availableWeeks.find(w => w.value === selectedWeek)?.label}
             </CardTitle>
             <CardDescription>

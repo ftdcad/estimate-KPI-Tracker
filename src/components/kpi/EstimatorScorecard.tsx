@@ -10,10 +10,16 @@ interface EstimatorScorecardProps {
 }
 
 const EstimatorScorecard: React.FC<EstimatorScorecardProps> = ({ kpiData }) => {
-  const [selectedEstimator, setSelectedEstimator] = useState('nell');
+  const getEstimatorKey = (estimatorName: string) => {
+    return estimatorName.toLowerCase().replace(/\s+/g, '');
+  };
+
+  const firstEstimatorKey = kpiData.estimatorList.length > 0 ? getEstimatorKey(kpiData.estimatorList[0]) : 'nell';
+  const [selectedEstimator, setSelectedEstimator] = useState(firstEstimatorKey);
 
   const metrics = calculateWeeklyMetrics(kpiData.estimators[selectedEstimator] || []);
-  const estimatorName = selectedEstimator.charAt(0).toUpperCase() + selectedEstimator.slice(1);
+  const estimatorName = kpiData.estimatorList.find(name => getEstimatorKey(name) === selectedEstimator) || 
+                       selectedEstimator.charAt(0).toUpperCase() + selectedEstimator.slice(1);
 
   const getPerformanceStatus = (actual: number, target: number, isLowerBetter: boolean = false) => {
     const ratio = isLowerBetter ? target / actual : actual / target;
@@ -44,8 +50,11 @@ const EstimatorScorecard: React.FC<EstimatorScorecardProps> = ({ kpiData }) => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="nell">Nell</SelectItem>
-              <SelectItem value="brandon">Brandon</SelectItem>
+              {kpiData.estimatorList.map((estimatorName) => (
+                <SelectItem key={getEstimatorKey(estimatorName)} value={getEstimatorKey(estimatorName)}>
+                  {estimatorName}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </CardContent>

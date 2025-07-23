@@ -47,6 +47,7 @@ export interface WeeklyMetrics {
 
 export interface KPIData {
   estimators: EstimatorData;
+  estimatorList: string[]; // List of estimator names for dynamic tabs
   historicalData: {
     [week: string]: EstimatorData;
   };

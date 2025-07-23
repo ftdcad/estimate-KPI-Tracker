@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import DataEntryTab from './kpi/DataEntryTab';
 import EstimatorScorecard from './kpi/EstimatorScorecard';
 import TeamDashboard from './kpi/TeamDashboard';
 import AnalysisTab from './kpi/AnalysisTab';
 import HistoricalData from './kpi/HistoricalData';
 import Documentation from './kpi/Documentation';
+import AddEstimatorDialog from './kpi/AddEstimatorDialog';
 import { EstimateEntry, KPIData } from '../types/kpi';
 
 const EstimatorKPITracker: React.FC = () => {
@@ -15,6 +17,7 @@ const EstimatorKPITracker: React.FC = () => {
       nell: [],
       brandon: []
     },
+    estimatorList: ['Nell', 'Brandon'], // Default estimators
     historicalData: {},
     currentWeek: '2025-01-20'
   });
@@ -24,7 +27,14 @@ const EstimatorKPITracker: React.FC = () => {
     const savedData = localStorage.getItem('kpi-tracker-data');
     if (savedData) {
       try {
-        setKPIData(JSON.parse(savedData));
+        const loadedData = JSON.parse(savedData);
+        // Migration: Add estimatorList if it doesn't exist
+        if (!loadedData.estimatorList) {
+          loadedData.estimatorList = Object.keys(loadedData.estimators).map(key => 
+            key.charAt(0).toUpperCase() + key.slice(1)
+          );
+        }
+        setKPIData(loadedData);
       } catch (error) {
         console.error('Error loading saved data:', error);
       }
@@ -44,6 +54,22 @@ const EstimatorKPITracker: React.FC = () => {
         [estimator]: data
       }
     }));
+  };
+
+  const addEstimator = (estimatorName: string) => {
+    const estimatorKey = estimatorName.toLowerCase().replace(/\s+/g, '');
+    setKPIData(prev => ({
+      ...prev,
+      estimators: {
+        ...prev.estimators,
+        [estimatorKey]: []
+      },
+      estimatorList: [...prev.estimatorList, estimatorName]
+    }));
+  };
+
+  const getEstimatorKey = (estimatorName: string) => {
+    return estimatorName.toLowerCase().replace(/\s+/g, '');
   };
 
   const getCurrentWeekDateRange = () => {
@@ -86,10 +112,26 @@ const EstimatorKPITracker: React.FC = () => {
           </CardHeader>
         </Card>
 
-        <Tabs defaultValue="nell-entry" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1">
-            <TabsTrigger value="nell-entry" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Nell - Current Week</TabsTrigger>
-            <TabsTrigger value="brandon-entry" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Brandon - Current Week</TabsTrigger>
+        <div className="flex justify-between items-center mb-6">
+          <div></div>
+          <AddEstimatorDialog
+            existingEstimators={kpiData.estimatorList}
+            onAddEstimator={addEstimator}
+          />
+        </div>
+
+        <Tabs defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} className="w-full">
+          <TabsList className={`grid w-full bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1`} 
+                    style={{ gridTemplateColumns: `repeat(${kpiData.estimatorList.length + 5}, minmax(0, 1fr))` }}>
+            {kpiData.estimatorList.map((estimatorName) => (
+              <TabsTrigger 
+                key={`${getEstimatorKey(estimatorName)}-entry`}
+                value={`${getEstimatorKey(estimatorName)}-entry`} 
+                className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft"
+              >
+                {estimatorName} - Current Week
+              </TabsTrigger>
+            ))}
             <TabsTrigger value="historical" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Historical Data</TabsTrigger>
             <TabsTrigger value="scorecards" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Estimator Scorecards</TabsTrigger>
             <TabsTrigger value="team-dashboard" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Team Dashboard</TabsTrigger>
@@ -97,25 +139,20 @@ const EstimatorKPITracker: React.FC = () => {
             <TabsTrigger value="documentation" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Documentation</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="nell-entry">
-            <DataEntryTab
-              estimator="nell"
-              estimatorName="Nell"
-              data={kpiData.estimators.nell}
-              onDataUpdate={(data) => updateEstimatorData('nell', data)}
-              weekRange={`${weekRange.start} - ${weekRange.end}`}
-            />
-          </TabsContent>
-
-          <TabsContent value="brandon-entry">
-            <DataEntryTab
-              estimator="brandon"
-              estimatorName="Brandon"
-              data={kpiData.estimators.brandon}
-              onDataUpdate={(data) => updateEstimatorData('brandon', data)}
-              weekRange={`${weekRange.start} - ${weekRange.end}`}
-            />
-          </TabsContent>
+          {kpiData.estimatorList.map((estimatorName) => {
+            const estimatorKey = getEstimatorKey(estimatorName);
+            return (
+              <TabsContent key={`${estimatorKey}-entry`} value={`${estimatorKey}-entry`}>
+                <DataEntryTab
+                  estimator={estimatorKey}
+                  estimatorName={estimatorName}
+                  data={kpiData.estimators[estimatorKey] || []}
+                  onDataUpdate={(data) => updateEstimatorData(estimatorKey, data)}
+                  weekRange={`${weekRange.start} - ${weekRange.end}`}
+                />
+              </TabsContent>
+            );
+          })}
 
           <TabsContent value="historical">
             <HistoricalData kpiData={kpiData} />
