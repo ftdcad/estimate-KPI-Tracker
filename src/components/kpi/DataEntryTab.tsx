@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Trash2, Plus, Calculator } from 'lucide-react';
 import { EstimateEntry } from '../../types/kpi';
 import { toast } from '@/hooks/use-toast';
+import { PersonalStatsCard } from './PersonalStatsCard';
 
 interface DataEntryTabProps {
   estimator: string;
@@ -104,19 +105,21 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>{estimatorName} - Current Week</span>
-          <span className="text-sm font-normal text-muted-foreground">
-            Entries: {data.length}
-          </span>
-        </CardTitle>
-        <CardDescription>
-          Week of {weekRange}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <>
+      <PersonalStatsCard data={data} estimatorName={estimatorName} />
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span>{estimatorName} - Current Week</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              Entries: {data.length}
+            </span>
+          </CardTitle>
+          <CardDescription>
+            Week of {weekRange}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-border">
             <thead>
@@ -271,6 +274,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
         </div>
       </CardContent>
     </Card>
+    </>
   );
 };
 
