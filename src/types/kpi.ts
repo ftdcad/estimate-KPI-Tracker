@@ -8,7 +8,7 @@ export interface EstimateEntry {
   revisionTimeHours: number | null;
   estimateValue: number | null;
   revisions: number | null;
-  status: 'incomplete' | 'sent' | 'unable-to-start' | 'pending' | null;
+  status: 'incomplete' | 'sent' | 'sent-to-carrier' | 'unable-to-start' | 'pending' | null;
   notes: string;
 }
 
