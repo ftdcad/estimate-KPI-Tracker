@@ -231,12 +231,13 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       <SelectTrigger className="border-0 h-8">
                         <SelectValue placeholder="" />
                       </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="incomplete">Incomplete</SelectItem>
-                        <SelectItem value="sent">Sent to the PA</SelectItem>
-                        <SelectItem value="unable-to-start">Unable to start</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                      </SelectContent>
+                       <SelectContent>
+                         <SelectItem value="incomplete">Incomplete</SelectItem>
+                         <SelectItem value="sent">Sent to the PA</SelectItem>
+                         <SelectItem value="sent-to-carrier">Sent to Carrier</SelectItem>
+                         <SelectItem value="unable-to-start">Unable to start</SelectItem>
+                         <SelectItem value="pending">Pending</SelectItem>
+                       </SelectContent>
                     </Select>
                   </td>
                   <td className="border border-border p-1">
