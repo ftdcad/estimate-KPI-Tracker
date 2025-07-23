@@ -10,6 +10,10 @@ export interface EstimateEntry {
   revisions: number | null;
   status: 'incomplete' | 'sent' | 'sent-to-carrier' | 'unable-to-start' | 'pending' | null;
   notes: string;
+  // Settlement/Liquidity fields
+  actualSettlement: number | null;
+  settlementDate: string | null;
+  isSettled: boolean;
 }
 
 export interface EstimatorData {

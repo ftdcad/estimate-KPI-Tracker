@@ -43,7 +43,10 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       estimateValue: null,
       revisions: null,
       status: null,
-      notes: ''
+      notes: '',
+      actualSettlement: null,
+      settlementDate: null,
+      isSettled: false
     };
   }
 

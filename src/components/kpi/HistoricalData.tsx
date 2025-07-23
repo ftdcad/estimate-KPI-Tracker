@@ -46,7 +46,10 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({ kpiData }) => {
         estimateValue: 12000,
         revisions: 1,
         status: 'sent',
-        notes: 'Completed on time'
+        notes: 'Completed on time',
+        actualSettlement: null,
+        settlementDate: null,
+        isSettled: false
       },
       {
         id: 'hist_2',
@@ -59,7 +62,10 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({ kpiData }) => {
         estimateValue: 35000,
         revisions: 0,
         status: 'sent',
-        notes: 'First time approval'
+        notes: 'First time approval',
+        actualSettlement: null,
+        settlementDate: null,
+        isSettled: false
       },
       {
         id: 'hist_3',
@@ -72,7 +78,10 @@ const HistoricalData: React.FC<HistoricalDataProps> = ({ kpiData }) => {
         estimateValue: 4500,
         revisions: 0,
         status: 'sent',
-        notes: 'Quick turnaround'
+        notes: 'Quick turnaround',
+        actualSettlement: null,
+        settlementDate: null,
+        isSettled: false
       }
     ];
 

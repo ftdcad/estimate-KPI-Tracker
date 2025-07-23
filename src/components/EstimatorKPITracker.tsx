@@ -8,6 +8,7 @@ import TeamDashboard from './kpi/TeamDashboard';
 import AnalysisTab from './kpi/AnalysisTab';
 import HistoricalData from './kpi/HistoricalData';
 import Documentation from './kpi/Documentation';
+import LiquidityTab from './kpi/LiquidityTab';
 import ManageEstimatorDialog from './kpi/ManageEstimatorDialog';
 import { ExcelImportDialog } from './kpi/ExcelImportDialog';
 import { EstimateEntry, KPIData } from '../types/kpi';
@@ -138,6 +139,30 @@ const EstimatorKPITracker: React.FC = () => {
     return estimatorName.toLowerCase().replace(/\s+/g, '');
   };
 
+  const updateEstimateEntry = (estimatorKey: string, entryId: string, updates: Partial<EstimateEntry>) => {
+    setKPIData(prev => {
+      const newData = { ...prev };
+      
+      // Update current week data
+      if (newData.estimators[estimatorKey]) {
+        newData.estimators[estimatorKey] = newData.estimators[estimatorKey].map(entry =>
+          entry.id === entryId ? { ...entry, ...updates } : entry
+        );
+      }
+      
+      // Update historical data
+      Object.keys(newData.historicalData).forEach(week => {
+        if (newData.historicalData[week][estimatorKey]) {
+          newData.historicalData[week][estimatorKey] = newData.historicalData[week][estimatorKey].map(entry =>
+            entry.id === entryId ? { ...entry, ...updates } : entry
+          );
+        }
+      });
+      
+      return newData;
+    });
+  };
+
   const getCurrentWeekDateRange = () => {
     const startDate = new Date(kpiData.currentWeek);
     const endDate = new Date(startDate);
@@ -193,7 +218,7 @@ const EstimatorKPITracker: React.FC = () => {
 
         <Tabs defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} className="w-full">
           <TabsList className={`grid w-full bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1`} 
-                    style={{ gridTemplateColumns: `repeat(${kpiData.estimatorList.length + 5}, minmax(0, 1fr))` }}>
+                    style={{ gridTemplateColumns: `repeat(${kpiData.estimatorList.length + 6}, minmax(0, 1fr))` }}>
             {kpiData.estimatorList.map((estimatorName) => (
               <TabsTrigger 
                 key={`${getEstimatorKey(estimatorName)}-entry`}
@@ -207,6 +232,7 @@ const EstimatorKPITracker: React.FC = () => {
             <TabsTrigger value="scorecards" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Estimator Scorecards</TabsTrigger>
             <TabsTrigger value="team-dashboard" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Team Dashboard</TabsTrigger>
             <TabsTrigger value="analysis" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Analysis</TabsTrigger>
+            <TabsTrigger value="liquidity" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Liquidity</TabsTrigger>
             <TabsTrigger value="documentation" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Documentation</TabsTrigger>
           </TabsList>
 
@@ -239,6 +265,10 @@ const EstimatorKPITracker: React.FC = () => {
 
           <TabsContent value="analysis">
             <AnalysisTab kpiData={kpiData} />
+          </TabsContent>
+
+          <TabsContent value="liquidity">
+            <LiquidityTab kpiData={kpiData} onUpdateEntry={updateEstimateEntry} />
           </TabsContent>
 
           <TabsContent value="documentation">

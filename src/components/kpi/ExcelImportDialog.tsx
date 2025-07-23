@@ -73,7 +73,10 @@ export const ExcelImportDialog = ({ onImport }: ExcelImportDialogProps) => {
           estimateValue: row['Estimate Value'] || row.Value ? parseFloat(row['Estimate Value'] || row.Value) : null,
           revisions: row.Revisions ? parseInt(row.Revisions) : null,
           status: mapStatus(row.Status || ''),
-          notes: row.Notes || ''
+          notes: row.Notes || '',
+          actualSettlement: null,
+          settlementDate: null,
+          isSettled: false
         }));
 
         setPreviewData(transformedData);
