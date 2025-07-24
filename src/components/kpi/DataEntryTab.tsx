@@ -61,11 +61,28 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     if (!entry.clientName.trim()) errors.push('Client Name');
     if (!entry.peril) errors.push('Peril');
     if (!entry.severity) errors.push('Severity');
-    if (!entry.timeHours || entry.timeHours <= 0) errors.push('Time Hours');
+    if (!entry.timeHours || entry.timeHours <= 0) errors.push('Hours');
     if (!entry.estimateValue || entry.estimateValue <= 0) errors.push('Estimated Value');
     if (!entry.status) errors.push('Status');
     
     return errors;
+  };
+
+  // Check if a field has validation error
+  const hasFieldError = (entry: EstimateEntry, field: string): boolean => {
+    if (!validationErrors.has(entry.id)) return false;
+    
+    switch (field) {
+      case 'date': return !entry.date;
+      case 'fileNumber': return !entry.fileNumber.trim();
+      case 'clientName': return !entry.clientName.trim();
+      case 'peril': return !entry.peril;
+      case 'severity': return !entry.severity;
+      case 'timeHours': return !entry.timeHours || entry.timeHours <= 0;
+      case 'estimateValue': return !entry.estimateValue || entry.estimateValue <= 0;
+      case 'status': return !entry.status;
+      default: return false;
+    }
   };
 
   const hasIncompleteRows = (): boolean => {
@@ -224,14 +241,14 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       type="date"
                       value={entry.date}
                       onChange={(e) => updateEntry(index, 'date', e.target.value)}
-                      className={cn("border-0 h-8", !entry.date && hasErrors && "ring-2 ring-red-500")}
+                      className={cn("border-0 h-8", hasFieldError(entry, 'date') && "ring-2 ring-red-500")}
                     />
                   </td>
                   <td className="border border-border p-1">
                     <Input
                       value={entry.fileNumber}
                       onChange={(e) => updateEntry(index, 'fileNumber', e.target.value)}
-                      className={cn("border-0 h-8", !entry.fileNumber.trim() && hasErrors && "ring-2 ring-red-500")}
+                      className={cn("border-0 h-8", hasFieldError(entry, 'fileNumber') && "ring-2 ring-red-500")}
                       placeholder="File #"
                     />
                   </td>
@@ -239,7 +256,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                     <Input
                       value={entry.clientName}
                       onChange={(e) => updateEntry(index, 'clientName', e.target.value)}
-                      className={cn("border-0 h-8", !entry.clientName.trim() && hasErrors && "ring-2 ring-red-500")}
+                      className={cn("border-0 h-8", hasFieldError(entry, 'clientName') && "ring-2 ring-red-500")}
                       placeholder="Client name"
                     />
                   </td>
@@ -248,7 +265,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       value={entry.peril || ''}
                       onValueChange={(value) => updateEntry(index, 'peril', value || null)}
                     >
-                      <SelectTrigger className={cn("border-0 h-8", !entry.peril && hasErrors && "ring-2 ring-red-500")}>
+                      <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'peril') && "ring-2 ring-red-500")}>
                         <SelectValue placeholder="" />
                       </SelectTrigger>
                       <SelectContent>
@@ -265,7 +282,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       value={entry.severity?.toString() || ''}
                       onValueChange={(value) => updateEntry(index, 'severity', value ? parseInt(value) : null)}
                     >
-                      <SelectTrigger className={cn("border-0 h-8", !entry.severity && hasErrors && "ring-2 ring-red-500")}>
+                      <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'severity') && "ring-2 ring-red-500")}>
                         <SelectValue placeholder="" />
                       </SelectTrigger>
                       <SelectContent>
@@ -282,7 +299,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       type="text"
                       value={entry.timeHours ?? ''}
                       onChange={(e) => updateEntry(index, 'timeHours', e.target.value ? parseFloat(e.target.value) : null)}
-                      className={cn("border-0 h-8 text-right", (!entry.timeHours || entry.timeHours <= 0) && hasErrors && "ring-2 ring-red-500")}
+                      className={cn("border-0 h-8 text-right", hasFieldError(entry, 'timeHours') && "ring-2 ring-red-500")}
                       placeholder="0.0"
                     />
                   </td>
@@ -300,7 +317,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       type="text"
                       value={entry.estimateValue ?? ''}
                       onChange={(e) => updateEntry(index, 'estimateValue', e.target.value ? parseFloat(e.target.value) : null)}
-                      className={cn("border-0 h-8 text-right", (!entry.estimateValue || entry.estimateValue <= 0) && hasErrors && "ring-2 ring-red-500")}
+                      className={cn("border-0 h-8 text-right", hasFieldError(entry, 'estimateValue') && "ring-2 ring-red-500")}
                       placeholder="0"
                     />
                   </td>
@@ -318,7 +335,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       value={entry.status || ''}
                       onValueChange={(value) => updateEntry(index, 'status', value || null)}
                     >
-                      <SelectTrigger className={cn("border-0 h-8", !entry.status && hasErrors && "ring-2 ring-red-500")}>
+                      <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'status') && "ring-2 ring-red-500")}>
                         <SelectValue placeholder="" />
                       </SelectTrigger>
                        <SelectContent>
