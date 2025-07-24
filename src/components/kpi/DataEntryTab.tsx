@@ -4,7 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Trash2, Save, Calculator } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Trash2, Save, Calculator, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 import { EstimateEntry, PERIL_OPTIONS } from '../../types/kpi';
 import { toast } from '@/hooks/use-toast';
 
@@ -186,6 +189,14 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       value = value || '';
     }
     
+    // Handle date field - format as YYYY-MM-DD
+    if (field === 'date' && value instanceof Date) {
+      const year = value.getFullYear();
+      const month = (value.getMonth() + 1).toString().padStart(2, '0');
+      const day = value.getDate().toString().padStart(2, '0');
+      value = `${year}-${month}-${day}`;
+    }
+    
     newData[index] = { ...newData[index], [field]: value };
     onDataUpdate(newData);
     
@@ -263,13 +274,30 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                     />
                   </td>
                   <td className="border border-border p-1">
-                    <Input
-                      type="date"
-                      value={getTodayLocalDate()}
-                      readOnly
-                      className="border-0 h-8 bg-muted/50 text-muted-foreground cursor-not-allowed"
-                      title="Date is automatically set to today"
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "border-0 h-8 w-full justify-start text-left font-normal",
+                            !entry.date && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {entry.date ? format(new Date(entry.date), "MM/dd/yyyy") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={entry.date ? new Date(entry.date) : undefined}
+                          onSelect={(date) => updateEntry(index, 'date', date)}
+                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          initialFocus
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </td>
                   <td className="border border-border p-1">
                     <Input
