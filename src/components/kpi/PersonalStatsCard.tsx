@@ -97,10 +97,25 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({ data, esti
   return (
     <Card className="mb-6 bg-gradient-to-r from-background to-muted/20 border-border">
       <CardContent className="p-6">
-        <div className="mb-4">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground">
             {estimatorName}'s Performance
           </h3>
+          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricType)}>
+            <SelectTrigger className="w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {metricConfigs.map((config) => (
+                <SelectItem key={config.id} value={config.id}>
+                  <div className="flex items-center gap-2">
+                    {config.icon}
+                    {config.label}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="flex items-center gap-4">
@@ -108,21 +123,7 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({ data, esti
             {currentConfig.icon}
           </div>
           <div className="flex-1">
-            <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricType)}>
-              <SelectTrigger className="w-48 mb-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {metricConfigs.map((config) => (
-                  <SelectItem key={config.id} value={config.id}>
-                    <div className="flex items-center gap-2">
-                      {config.icon}
-                      {config.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <p className="text-sm text-muted-foreground mb-1">{currentConfig.label}</p>
             <p className={`text-3xl font-bold transition-all duration-300 ${currentConfig.color}`}>
               {currentConfig.formatter(currentValue)}
             </p>
