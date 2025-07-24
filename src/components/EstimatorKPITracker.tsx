@@ -266,22 +266,22 @@ const EstimatorKPITracker: React.FC = () => {
       {/* Main Content */}
       <div className="p-6">
         <Card className="mb-6 bg-gradient-card shadow-medium border-0">
-          <CardHeader className="pb-3">
-            <div className="flex flex-col space-y-3">
+          <CardHeader className="pb-3 flex flex-row justify-between items-start">
+            <div>
               <CardTitle className="text-xl text-primary">
                 Week of {weekRange.start} - {weekRange.end}
               </CardTitle>
               <CardDescription className="text-base">
                 Performance tracking for the estimating department
               </CardDescription>
-              <ManageEstimatorDialog
-                existingEstimators={kpiData.estimatorList}
-                onAddEstimator={addEstimator}
-                onEditEstimator={editEstimator}
-                onRemoveEstimator={removeEstimator}
-                onClearEstimatorData={clearEstimatorData}
-              />
             </div>
+            <ManageEstimatorDialog
+              existingEstimators={kpiData.estimatorList}
+              onAddEstimator={addEstimator}
+              onEditEstimator={editEstimator}
+              onRemoveEstimator={removeEstimator}
+              onClearEstimatorData={clearEstimatorData}
+            />
           </CardHeader>
         </Card>
 
