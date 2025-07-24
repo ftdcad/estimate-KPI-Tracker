@@ -266,50 +266,44 @@ const EstimatorKPITracker: React.FC = () => {
       {/* Main Content */}
       <div className="p-6">
         <Tabs defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} className="w-full">
-          <div className="flex flex-col md:flex-row gap-6 mb-6">
-            <div className="flex-1">
-              <TabsList className={`grid w-full bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1`} 
-                        style={{ gridTemplateColumns: `repeat(${kpiData.estimatorList.length + 6}, minmax(0, 1fr))` }}>
-                {kpiData.estimatorList.map((estimatorName) => (
-                  <TabsTrigger 
-                    key={`${getEstimatorKey(estimatorName)}-entry`}
-                    value={`${getEstimatorKey(estimatorName)}-entry`} 
-                    className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft"
-                  >
-                    {estimatorName}
-                  </TabsTrigger>
-                ))}
-                <TabsTrigger value="historical" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Historical Data</TabsTrigger>
-                <TabsTrigger value="scorecards" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Estimator Scorecards</TabsTrigger>
-                <TabsTrigger value="team-dashboard" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Team Dashboard</TabsTrigger>
-                <TabsTrigger value="analysis" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Analysis</TabsTrigger>
-                <TabsTrigger value="liquidity" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Liquidity</TabsTrigger>
-                <TabsTrigger value="documentation" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Documentation</TabsTrigger>
-              </TabsList>
-            </div>
+          <TabsList className={`grid w-full bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1 mb-6`} 
+                    style={{ gridTemplateColumns: `repeat(${kpiData.estimatorList.length + 6}, minmax(0, 1fr))` }}>
+            {kpiData.estimatorList.map((estimatorName) => (
+              <TabsTrigger 
+                key={`${getEstimatorKey(estimatorName)}-entry`}
+                value={`${getEstimatorKey(estimatorName)}-entry`} 
+                className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft"
+              >
+                {estimatorName}
+              </TabsTrigger>
+            ))}
+            <TabsTrigger value="historical" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Historical Data</TabsTrigger>
+            <TabsTrigger value="scorecards" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Estimator Scorecards</TabsTrigger>
+            <TabsTrigger value="team-dashboard" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Team Dashboard</TabsTrigger>
+            <TabsTrigger value="analysis" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Analysis</TabsTrigger>
+            <TabsTrigger value="liquidity" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Liquidity</TabsTrigger>
+            <TabsTrigger value="documentation" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Documentation</TabsTrigger>
+          </TabsList>
 
-            <div className="flex-1">
-              <Card className="bg-gradient-card shadow-medium border-0">
-                <CardHeader className="pb-3 flex flex-row justify-between items-start">
-                  <div>
-                    <CardTitle className="text-xl text-primary">
-                      Week of {weekRange.start} - {weekRange.end}
-                    </CardTitle>
-                    <CardDescription className="text-base">
-                      Performance tracking for the estimating department
-                    </CardDescription>
-                  </div>
-                  <ManageEstimatorDialog
-                    existingEstimators={kpiData.estimatorList}
-                    onAddEstimator={addEstimator}
-                    onEditEstimator={editEstimator}
-                    onRemoveEstimator={removeEstimator}
-                    onClearEstimatorData={clearEstimatorData}
-                  />
-                </CardHeader>
-              </Card>
-            </div>
-          </div>
+          <Card className="mb-6 bg-gradient-card shadow-medium border-0">
+            <CardHeader className="pb-3 flex flex-row justify-between items-start">
+              <div>
+                <CardTitle className="text-xl text-primary">
+                  Week of {weekRange.start} - {weekRange.end}
+                </CardTitle>
+                <CardDescription className="text-base">
+                  Performance tracking for the estimating department
+                </CardDescription>
+              </div>
+              <ManageEstimatorDialog
+                existingEstimators={kpiData.estimatorList}
+                onAddEstimator={addEstimator}
+                onEditEstimator={editEstimator}
+                onRemoveEstimator={removeEstimator}
+                onClearEstimatorData={clearEstimatorData}
+              />
+            </CardHeader>
+          </Card>
 
           {kpiData.estimatorList.map((estimatorName) => {
             const estimatorKey = getEstimatorKey(estimatorName);
