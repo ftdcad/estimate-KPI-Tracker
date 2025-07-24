@@ -10,10 +10,12 @@ import HistoricalData from './kpi/HistoricalData';
 import Documentation from './kpi/Documentation';
 import LiquidityTab from './kpi/LiquidityTab';
 import ManageEstimatorDialog from './kpi/ManageEstimatorDialog';
+import { PersonalStatsCard } from './kpi/PersonalStatsCard';
 
 import { EstimateEntry, KPIData } from '../types/kpi';
 
 const EstimatorKPITracker: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<string>('');
   const [kpiData, setKPIData] = useState<KPIData>({
     estimators: {
       nell: [],
@@ -249,6 +251,39 @@ const EstimatorKPITracker: React.FC = () => {
 
   const weekRange = getCurrentWeekDateRange();
 
+  // Set default active tab
+  useEffect(() => {
+    if (kpiData.estimatorList.length > 0 && !activeTab) {
+      setActiveTab(`${getEstimatorKey(kpiData.estimatorList[0])}-entry`);
+    }
+  }, [kpiData.estimatorList, activeTab]);
+
+  // Check if current tab is an estimator tab
+  const isEstimatorTab = (tabValue: string) => {
+    return kpiData.estimatorList.some(estimator => 
+      `${getEstimatorKey(estimator)}-entry` === tabValue
+    );
+  };
+
+  // Get active estimator data
+  const getActiveEstimatorData = () => {
+    if (!isEstimatorTab(activeTab)) return null;
+    
+    const estimatorName = kpiData.estimatorList.find(estimator => 
+      `${getEstimatorKey(estimator)}-entry` === activeTab
+    );
+    
+    if (!estimatorName) return null;
+    
+    const estimatorKey = getEstimatorKey(estimatorName);
+    return {
+      name: estimatorName,
+      data: kpiData.estimators[estimatorKey] || []
+    };
+  };
+
+  const activeEstimatorData = getActiveEstimatorData();
+
   return (
     <div className="min-h-screen bg-gradient-secondary">
       {/* Header */}
@@ -265,7 +300,12 @@ const EstimatorKPITracker: React.FC = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        <Tabs defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} className="w-full">
+        <Tabs 
+          defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} 
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
           <TabsList className={`grid w-full bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1 mb-6`} 
                     style={{ gridTemplateColumns: `repeat(${kpiData.estimatorList.length + 6}, minmax(0, 1fr))` }}>
             {kpiData.estimatorList.map((estimatorName) => (
@@ -285,25 +325,39 @@ const EstimatorKPITracker: React.FC = () => {
             <TabsTrigger value="documentation" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-soft">Documentation</TabsTrigger>
           </TabsList>
 
-          <Card className="mb-6 bg-gradient-card shadow-medium border-0">
-            <CardHeader className="pb-3 flex flex-row justify-between items-start">
-              <div>
-                <CardTitle className="text-xl text-primary">
-                  Week of {weekRange.start} - {weekRange.end}
-                </CardTitle>
-                <CardDescription className="text-base">
-                  Performance tracking for the estimating department
-                </CardDescription>
+          {/* 50/50 Split Layout for Week Card and Performance Card */}
+          <div className="flex flex-col md:flex-row gap-6 mb-6">
+            {/* Week Card - Left Side */}
+            <Card className="flex-1 bg-gradient-card shadow-medium border-0">
+              <CardHeader className="pb-3 flex flex-row justify-between items-start">
+                <div>
+                  <CardTitle className="text-xl text-primary">
+                    Week of {weekRange.start} - {weekRange.end}
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    Performance tracking for the estimating department
+                  </CardDescription>
+                </div>
+                <ManageEstimatorDialog
+                  existingEstimators={kpiData.estimatorList}
+                  onAddEstimator={addEstimator}
+                  onEditEstimator={editEstimator}
+                  onRemoveEstimator={removeEstimator}
+                  onClearEstimatorData={clearEstimatorData}
+                />
+              </CardHeader>
+            </Card>
+
+            {/* Performance Card - Right Side */}
+            {activeEstimatorData && (
+              <div className="flex-1">
+                <PersonalStatsCard 
+                  data={activeEstimatorData.data} 
+                  estimatorName={activeEstimatorData.name} 
+                />
               </div>
-              <ManageEstimatorDialog
-                existingEstimators={kpiData.estimatorList}
-                onAddEstimator={addEstimator}
-                onEditEstimator={editEstimator}
-                onRemoveEstimator={removeEstimator}
-                onClearEstimatorData={clearEstimatorData}
-              />
-            </CardHeader>
-          </Card>
+            )}
+          </div>
 
           {kpiData.estimatorList.map((estimatorName) => {
             const estimatorKey = getEstimatorKey(estimatorName);
