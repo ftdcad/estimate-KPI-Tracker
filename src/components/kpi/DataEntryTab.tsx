@@ -372,7 +372,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="number"
-                      step="0.01"
+                      step="0.25"
                       value={entry.timeHours ?? ''}
                       onChange={(e) => updateEntry(index, 'timeHours', e.target.value)}
                       onBlur={(e) => {
@@ -386,7 +386,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="number"
-                      step="0.01"
+                      step="0.25"
                       value={entry.revisionTimeHours ?? ''}
                       onChange={(e) => updateEntry(index, 'revisionTimeHours', e.target.value)}
                       onBlur={(e) => {
