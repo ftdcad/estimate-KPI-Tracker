@@ -266,25 +266,24 @@ const EstimatorKPITracker: React.FC = () => {
       {/* Main Content */}
       <div className="p-6">
         <Card className="mb-6 bg-gradient-card shadow-medium border-0">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-xl text-primary">
-              Week of {weekRange.start} - {weekRange.end}
-            </CardTitle>
-            <CardDescription className="text-base">
-              Performance tracking for the estimating department
-            </CardDescription>
+          <CardHeader className="pb-3 flex flex-row justify-between items-start">
+            <div>
+              <CardTitle className="text-xl text-primary">
+                Week of {weekRange.start} - {weekRange.end}
+              </CardTitle>
+              <CardDescription className="text-base">
+                Performance tracking for the estimating department
+              </CardDescription>
+            </div>
+            <ManageEstimatorDialog
+              existingEstimators={kpiData.estimatorList}
+              onAddEstimator={addEstimator}
+              onEditEstimator={editEstimator}
+              onRemoveEstimator={removeEstimator}
+              onClearEstimatorData={clearEstimatorData}
+            />
           </CardHeader>
         </Card>
-
-        <div className="flex justify-end items-center mb-6">
-          <ManageEstimatorDialog
-            existingEstimators={kpiData.estimatorList}
-            onAddEstimator={addEstimator}
-            onEditEstimator={editEstimator}
-            onRemoveEstimator={removeEstimator}
-            onClearEstimatorData={clearEstimatorData}
-          />
-        </div>
 
         <Tabs defaultValue={`${getEstimatorKey(kpiData.estimatorList[0] || 'nell')}-entry`} className="w-full">
           <TabsList className={`grid w-full bg-white/70 backdrop-blur-sm shadow-soft border border-white/20 rounded-xl p-1`} 
