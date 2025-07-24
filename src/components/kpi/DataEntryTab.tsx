@@ -28,6 +28,15 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
 
+  // Helper function to get today's date in local timezone
+  const getTodayLocalDate = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = (today.getMonth() + 1).toString().padStart(2, '0');
+    const day = today.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Initialize with one empty row if no data
   if (data.length === 0) {
     onDataUpdate([createEmptyEntry()]);
@@ -36,7 +45,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
   function createEmptyEntry(): EstimateEntry {
     return {
       id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayLocalDate(),
       fileNumber: '',
       clientName: '',
       peril: null, // Changed: No longer auto-populates to "Wind"
@@ -237,7 +246,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="date"
-                      value={new Date().toISOString().split('T')[0]}
+                      value={getTodayLocalDate()}
                       readOnly
                       className="border-0 h-8 bg-muted/50 text-muted-foreground cursor-not-allowed"
                       title="Date is automatically set to today"
