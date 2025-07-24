@@ -383,7 +383,7 @@ const EstimatorKPITracker: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="team-dashboard">
-            <TeamDashboard kpiData={kpiData} />
+            <TeamDashboard kpiData={kpiData} onAddEstimator={addEstimator} />
           </TabsContent>
 
           <TabsContent value="analysis">

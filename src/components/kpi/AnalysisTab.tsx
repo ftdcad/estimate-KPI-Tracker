@@ -57,42 +57,48 @@ const AnalysisTab: React.FC<AnalysisTabProps> = ({ kpiData }) => {
     }
   });
 
-  // Work assignment recommendations
+  // Work assignment recommendations based on actual performance
+  const sortedByAccuracy = estimatorAnalysis.sort((a, b) => a.metrics.revisionRate - b.metrics.revisionRate);
+  const sortedBySpeed = estimatorAnalysis.sort((a, b) => b.metrics.dollarPerHour - a.metrics.dollarPerHour);
+  const topPerformer = estimatorAnalysis.find(e => e.metrics.revisionRate < 1.2 && e.metrics.dollarPerHour > 10000);
+  const averagePerformers = estimatorAnalysis.filter(e => e.metrics.revisionRate >= 1.2 && e.metrics.revisionRate <= 1.5);
+  const strugglingPerformers = estimatorAnalysis.filter(e => e.metrics.revisionRate > 1.5);
+
   const assignmentMatrix = [
     {
       severity: 1,
-      primary: 'Any Estimator',
+      primary: estimatorAnalysis.length > 0 ? 'Any Available Estimator' : 'No estimators available',
       secondary: '-',
       avoid: '-',
-      reason: 'Low complexity, good for all skill levels'
+      reason: 'Low complexity, suitable for all skill levels and training'
     },
     {
       severity: 2,
-      primary: estimatorAnalysis.find(e => e.metrics.dollarPerHour > 10000)?.name || 'Any Estimator',
-      secondary: 'Any Estimator',
-      avoid: '-',
-      reason: 'Medium complexity, most estimators can handle'
+      primary: averagePerformers.length > 0 ? averagePerformers[0].name : (estimatorAnalysis.length > 0 ? 'Any Available Estimator' : 'No estimators available'),
+      secondary: estimatorAnalysis.length > 1 ? 'Other estimators' : '-',
+      avoid: strugglingPerformers.length > 2 ? strugglingPerformers.slice(-1)[0].name : '-',
+      reason: 'Medium complexity, good for most estimators'
     },
     {
       severity: 3,
-      primary: estimatorAnalysis.find(e => e.metrics.revisionRate < 1.2)?.name || 'Best Performer',
-      secondary: estimatorAnalysis.find(e => e.metrics.revisionRate < 1.5)?.name || '-',
-      avoid: estimatorAnalysis.find(e => e.metrics.revisionRate > 1.8)?.name || '-',
-      reason: 'High complexity, requires experienced estimator'
+      primary: sortedByAccuracy.length > 0 ? sortedByAccuracy[0].name : 'Best available estimator',
+      secondary: sortedByAccuracy.length > 1 ? sortedByAccuracy[1].name : '-',
+      avoid: strugglingPerformers.length > 0 ? strugglingPerformers.map(e => e.name).join(', ') : '-',
+      reason: 'High complexity, requires accuracy and experience'
     },
     {
       severity: 4,
-      primary: estimatorAnalysis.find(e => e.metrics.revisionRate < 1.0)?.name || 'Top Performer',
-      secondary: '-',
-      avoid: estimatorAnalysis.filter(e => e.metrics.revisionRate > 1.5).map(e => e.name).join(', ') || '-',
-      reason: 'Very high complexity, only top performers'
+      primary: topPerformer?.name || (sortedByAccuracy.length > 0 ? sortedByAccuracy[0].name : 'Most experienced estimator'),
+      secondary: sortedByAccuracy.length > 1 && sortedByAccuracy[1].metrics.revisionRate < 1.3 ? sortedByAccuracy[1].name : '-',
+      avoid: strugglingPerformers.length > 0 ? strugglingPerformers.map(e => e.name).join(', ') : '-',
+      reason: 'Very high complexity, only assign to proven performers'
     },
     {
       severity: 5,
-      primary: estimatorAnalysis.find(e => e.metrics.revisionRate < 1.0 && e.metrics.dollarPerHour > 12000)?.name || 'Top Performer',
+      primary: topPerformer?.name || (sortedBySpeed.length > 0 && sortedBySpeed[0].metrics.revisionRate < 1.3 ? sortedBySpeed[0].name : 'Most experienced estimator'),
       secondary: '-',
-      avoid: estimatorAnalysis.filter(e => e.metrics.revisionRate > 1.5).map(e => e.name).join(', ') || '-',
-      reason: 'Highest complexity, requires expert level'
+      avoid: strugglingPerformers.length > 0 ? strugglingPerformers.map(e => e.name).join(', ') : (estimatorAnalysis.filter(e => e.metrics.revisionRate > 1.3).map(e => e.name).join(', ') || '-'),
+      reason: 'Highest complexity, requires expert-level accuracy and efficiency'
     }
   ];
 
@@ -111,8 +117,11 @@ const AnalysisTab: React.FC<AnalysisTabProps> = ({ kpiData }) => {
         <CardContent>
           <Alert>
             <AlertDescription>
-              <strong>Recommendation Summary</strong><br />
-              Based on current performance metrics, here are the key insights for the estimating department.
+              <strong>Team Performance Overview</strong><br />
+              {estimatorAnalysis.length === 0 
+                ? "No estimator data available for analysis. Please add some estimate entries to see recommendations."
+                : `Analyzing ${estimatorAnalysis.length} estimator${estimatorAnalysis.length > 1 ? 's' : ''} with ${estimatorAnalysis.reduce((sum, est) => sum + est.metrics.totalEstimates, 0)} total estimates this week.`
+              }
             </AlertDescription>
           </Alert>
         </CardContent>

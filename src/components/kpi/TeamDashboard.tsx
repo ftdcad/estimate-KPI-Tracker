@@ -1,16 +1,17 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { KPIData } from '../../types/kpi';
 import { calculateWeeklyMetrics, calculateTeamMetrics } from '../../utils/kpiCalculations';
+import AddEstimatorDialog from './AddEstimatorDialog';
 
 interface TeamDashboardProps {
   kpiData: KPIData;
+  onAddEstimator: (estimatorName: string) => void;
 }
 
-const TeamDashboard: React.FC<TeamDashboardProps> = ({ kpiData }) => {
+const TeamDashboard: React.FC<TeamDashboardProps> = ({ kpiData, onAddEstimator }) => {
   const teamMetrics = calculateTeamMetrics(kpiData.estimators);
   
   const estimatorMetrics = Object.entries(kpiData.estimators).map(([name, data]) => ({
@@ -193,13 +194,10 @@ const TeamDashboard: React.FC<TeamDashboardProps> = ({ kpiData }) => {
           <CardTitle>Team Management</CardTitle>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={() => alert('In the full implementation, this would open a dialog to add a new estimator with their own data entry tab.')}
-            className="w-full md:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add New Estimator
-          </Button>
+          <AddEstimatorDialog
+            existingEstimators={kpiData.estimatorList}
+            onAddEstimator={onAddEstimator}
+          />
         </CardContent>
       </Card>
     </div>

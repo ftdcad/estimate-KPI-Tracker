@@ -120,11 +120,29 @@ const EstimatorScorecard: React.FC<EstimatorScorecardProps> = ({ kpiData }) => {
                       <td className="border border-border p-3 text-center">{timeDisplay || '-'}</td>
                       <td className="border border-border p-3 text-center">{target.time}</td>
                       <td className="border border-border p-3 text-center">
-                        {count > 0 ? (
-                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                            ✓ Met
-                          </Badge>
-                        ) : (
+                        {count > 0 && avgTime > 0 ? (() => {
+                          // Convert target time to hours for comparison
+                          let targetHours = 0;
+                          if (target.time.includes('30 mins')) targetHours = 0.5;
+                          else if (target.time.includes('1 hour')) targetHours = 1;
+                          else if (target.time.includes('3 hours')) targetHours = 3;
+                          else if (target.time.includes('6 hours')) targetHours = 6;
+                          else if (target.time.includes('12 hours')) targetHours = 12;
+                          
+                          const status = avgTime <= targetHours ? 'success' : avgTime <= targetHours * 1.2 ? 'warning' : 'destructive';
+                          const text = avgTime <= targetHours ? '✓ Met' : avgTime <= targetHours * 1.2 ? '⚠ Close' : '✗ Over';
+                          const className = status === 'success' 
+                            ? 'bg-green-100 text-green-800 border-green-300'
+                            : status === 'warning'
+                            ? 'bg-yellow-100 text-yellow-800 border-yellow-300'
+                            : 'bg-red-100 text-red-800 border-red-300';
+                          
+                          return (
+                            <Badge variant="outline" className={className}>
+                              {text}
+                            </Badge>
+                          );
+                        })() : (
                           <span className="text-muted-foreground">-</span>
                         )}
                       </td>
