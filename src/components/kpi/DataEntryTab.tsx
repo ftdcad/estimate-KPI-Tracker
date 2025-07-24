@@ -66,8 +66,8 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     const errors: string[] = [];
     
     // Removed Date validation since it auto-populates to today
-    if (!entry.fileNumber.trim()) errors.push('File Number');
-    if (!entry.clientName.trim()) errors.push('Client Name');
+    if (!entry.fileNumber || !entry.fileNumber.trim()) errors.push('File Number');
+    if (!entry.clientName || !entry.clientName.trim()) errors.push('Client Name');
     if (!entry.peril || entry.peril.trim() === '') errors.push('Peril');
     if (!entry.severity) errors.push('Severity');
     if (!entry.timeHours || entry.timeHours <= 0) errors.push('Hours');
@@ -83,8 +83,8 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     
     switch (field) {
       // Removed date case since it's no longer validated
-      case 'fileNumber': return !entry.fileNumber.trim();
-      case 'clientName': return !entry.clientName.trim();
+      case 'fileNumber': return !entry.fileNumber || !entry.fileNumber.trim();
+      case 'clientName': return !entry.clientName || !entry.clientName.trim();
       case 'peril': return !entry.peril || entry.peril.trim() === '';
       case 'severity': return !entry.severity;
       case 'timeHours': return !entry.timeHours || entry.timeHours <= 0;
