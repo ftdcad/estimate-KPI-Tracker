@@ -31,6 +31,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
 }) => {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
+  const [focusedEstimateInput, setFocusedEstimateInput] = useState<string | null>(null);
 
   // Helper function to get today's date in local timezone
   const getTodayLocalDate = (): string => {
@@ -412,9 +413,19 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="text"
-                      value={entry.estimateValue ? formatCurrency(entry.estimateValue) : ''}
+                      value={
+                        focusedEstimateInput === entry.id 
+                          ? (entry.estimateValue?.toString() || '') 
+                          : (entry.estimateValue ? formatCurrency(entry.estimateValue) : '')
+                      }
+                      onFocus={() => setFocusedEstimateInput(entry.id)}
+                      onBlur={(e) => {
+                        setFocusedEstimateInput(null);
+                        const cleanValue = e.target.value.replace(/,/g, '');
+                        updateEntry(index, 'estimateValue', cleanValue ? parseFloat(cleanValue) : null);
+                      }}
                       onChange={(e) => {
-                        // Remove commas and parse the value
+                        // During focus, allow typing without formatting
                         const cleanValue = e.target.value.replace(/,/g, '');
                         updateEntry(index, 'estimateValue', cleanValue ? parseFloat(cleanValue) : null);
                       }}
