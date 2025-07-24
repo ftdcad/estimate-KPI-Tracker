@@ -435,12 +435,30 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                     </Select>
                   </td>
                   <td className="border border-border p-1">
-                    <Input
-                      value={entry.notes}
-                      onChange={(e) => updateEntry(index, 'notes', e.target.value)}
-                      className="border-0 h-8"
-                      placeholder="Notes"
-                    />
+                    {entry.notes === 'Custom...' || (!['Calls to PA', 'Emails', 'File review'].includes(entry.notes) && entry.notes) ? (
+                      <Input
+                        value={entry.notes === 'Custom...' ? '' : entry.notes}
+                        onChange={(e) => updateEntry(index, 'notes', e.target.value)}
+                        className="border-0 h-8"
+                        placeholder="Type custom note..."
+                        autoFocus
+                      />
+                    ) : (
+                      <Select
+                        value={entry.notes || ''}
+                        onValueChange={(value) => updateEntry(index, 'notes', value)}
+                      >
+                        <SelectTrigger className="border-0 h-8">
+                          <SelectValue placeholder="Select note type..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background border border-border shadow-lg z-50">
+                          <SelectItem value="Calls to PA">Calls to PA</SelectItem>
+                          <SelectItem value="Emails">Emails</SelectItem>
+                          <SelectItem value="File review">File review</SelectItem>
+                          <SelectItem value="Custom...">Custom...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </td>
                 </tr>
               )})}
