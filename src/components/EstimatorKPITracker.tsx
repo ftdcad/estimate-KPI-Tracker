@@ -11,7 +11,6 @@ import Documentation from './kpi/Documentation';
 import LiquidityTab from './kpi/LiquidityTab';
 import ManageEstimatorDialog from './kpi/ManageEstimatorDialog';
 import { PersonalStatsCard } from './kpi/PersonalStatsCard';
-import { ThemeToggle } from './ui/theme-toggle';
 
 import { EstimateEntry, KPIData } from '../types/kpi';
 
@@ -289,16 +288,13 @@ const EstimatorKPITracker: React.FC = () => {
     <div className="min-h-screen bg-gradient-secondary">
       {/* Header */}
       <div className="bg-gradient-primary text-white p-6 shadow-medium">
-        <div className="container mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">
-              Estimator KPI Tracking System
-            </h1>
-            <p className="text-white/90 text-lg mt-2">
-              Coastal Claim Services
-            </p>
-          </div>
-          <ThemeToggle />
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold">
+            Estimator KPI Tracking System
+          </h1>
+          <p className="text-white/90 text-lg mt-2">
+            Coastal Claim Services
+          </p>
         </div>
       </div>
 
