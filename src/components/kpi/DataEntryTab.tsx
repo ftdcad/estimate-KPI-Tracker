@@ -189,32 +189,22 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-100 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded"></div>
-              <span className="text-muted-foreground">Required Fields</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-700 rounded"></div>
-              <span className="text-muted-foreground">Optional Fields</span>
-            </div>
-          </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-border">
             <thead>
-              <tr>
-                <th className="border border-border p-2 w-10 bg-primary text-primary-foreground">✓</th>
-                <th className="border border-border p-2 w-24 bg-green-100 dark:bg-green-900/20 text-foreground">Date</th>
-                <th className="border border-border p-2 w-32 bg-green-100 dark:bg-green-900/20 text-foreground">File Number</th>
-                <th className="border border-border p-2 w-40 bg-green-100 dark:bg-green-900/20 text-foreground">Client Name</th>
-                <th className="border border-border p-2 w-28 bg-green-100 dark:bg-green-900/20 text-foreground">Peril</th>
-                <th className="border border-border p-2 w-20 bg-green-100 dark:bg-green-900/20 text-foreground">Severity</th>
-                <th className="border border-border p-2 w-24 bg-green-100 dark:bg-green-900/20 text-foreground">Time (hrs)</th>
-                <th className="border border-border p-2 w-24 bg-blue-100 dark:bg-blue-900/20 text-foreground">Rev Time</th>
-                <th className="border border-border p-2 w-28 bg-green-100 dark:bg-green-900/20 text-foreground">Est. Value</th>
-                <th className="border border-border p-2 w-20 bg-blue-100 dark:bg-blue-900/20 text-foreground">Revisions</th>
-                <th className="border border-border p-2 w-28 bg-green-100 dark:bg-green-900/20 text-foreground">Status</th>
-                <th className="border border-border p-2 w-36 bg-blue-100 dark:bg-blue-900/20 text-foreground">Notes</th>
+              <tr className="bg-primary text-primary-foreground">
+                <th className="border border-border p-2 w-10">✓</th>
+                <th className="border border-border p-2 w-24">Date</th>
+                <th className="border border-border p-2 w-32">File Number</th>
+                <th className="border border-border p-2 w-40">Client Name</th>
+                <th className="border border-border p-2 w-28">Peril</th>
+                <th className="border border-border p-2 w-20">Severity</th>
+                <th className="border border-border p-2 w-24">Time (hrs)</th>
+                <th className="border border-border p-2 w-24">Rev Time</th>
+                <th className="border border-border p-2 w-28">Est. Value</th>
+                <th className="border border-border p-2 w-20">Revisions</th>
+                <th className="border border-border p-2 w-28">Status</th>
+                <th className="border border-border p-2 w-36">Notes</th>
               </tr>
             </thead>
             <tbody>
