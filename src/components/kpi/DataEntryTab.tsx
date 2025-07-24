@@ -192,12 +192,11 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       value = value || '';
     }
     
-    // Handle date field - format as YYYY-MM-DD
+    // Handle date field - format as YYYY-MM-DD without timezone conversion
     if (field === 'date' && value instanceof Date) {
-      const year = value.getFullYear();
-      const month = (value.getMonth() + 1).toString().padStart(2, '0');
-      const day = value.getDate().toString().padStart(2, '0');
-      value = `${year}-${month}-${day}`;
+      // Use toLocaleDateString to avoid timezone issues
+      const localDate = new Date(value.getTime() - (value.getTimezoneOffset() * 60000));
+      value = localDate.toISOString().split('T')[0];
     }
     
     newData[index] = { ...newData[index], [field]: value };
