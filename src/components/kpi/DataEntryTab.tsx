@@ -223,6 +223,16 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     setSelectedRows(newSelected);
   };
 
+  // Helper function to format currency values
+  const formatCurrency = (value: number | null): string => {
+    if (value === null || value === undefined) return '';
+    return new Intl.NumberFormat('en-US', {
+      style: 'decimal',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
   const calculateMetrics = () => {
     toast({
       title: "Metrics calculated",
@@ -402,10 +412,14 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="text"
-                      value={entry.estimateValue ?? ''}
-                      onChange={(e) => updateEntry(index, 'estimateValue', e.target.value ? parseFloat(e.target.value) : null)}
+                      value={entry.estimateValue ? formatCurrency(entry.estimateValue) : ''}
+                      onChange={(e) => {
+                        // Remove commas and parse the value
+                        const cleanValue = e.target.value.replace(/,/g, '');
+                        updateEntry(index, 'estimateValue', cleanValue ? parseFloat(cleanValue) : null);
+                      }}
                       className={cn("border-0 h-8 text-right", hasFieldError(entry, 'estimateValue') && "ring-2 ring-red-500")}
-                      placeholder="0"
+                      placeholder="0.00"
                     />
                   </td>
                   <td className="border border-border p-1">
