@@ -36,7 +36,45 @@ const EstimatorKPITracker: React.FC = () => {
             key.charAt(0).toUpperCase() + key.slice(1)
           );
         }
-        setKPIData(loadedData);
+        
+        // Clean up duplicates: Remove lowercase duplicates from estimatorList
+        const cleanEstimatorList = [];
+        const seenNames = new Set();
+        
+        loadedData.estimatorList.forEach((name: string) => {
+          const normalizedName = name.toLowerCase();
+          if (!seenNames.has(normalizedName)) {
+            seenNames.add(normalizedName);
+            // Keep the properly capitalized version
+            cleanEstimatorList.push(name.charAt(0).toUpperCase() + name.slice(1).toLowerCase());
+          }
+        });
+        
+        // Clean up estimators object: Remove lowercase duplicates
+        const cleanEstimators: any = {};
+        cleanEstimatorList.forEach((name: string) => {
+          const key = name.toLowerCase().replace(/\s+/g, '');
+          // Keep data from either the properly cased or lowercase version
+          cleanEstimators[key] = loadedData.estimators[key] || loadedData.estimators[name.toLowerCase()] || [];
+        });
+        
+        // Clean up historical data
+        const cleanHistoricalData: any = {};
+        Object.keys(loadedData.historicalData || {}).forEach(week => {
+          cleanHistoricalData[week] = {};
+          cleanEstimatorList.forEach((name: string) => {
+            const key = name.toLowerCase().replace(/\s+/g, '');
+            const weekData = loadedData.historicalData[week];
+            cleanHistoricalData[week][key] = weekData[key] || weekData[name.toLowerCase()] || [];
+          });
+        });
+        
+        setKPIData({
+          ...loadedData,
+          estimatorList: cleanEstimatorList,
+          estimators: cleanEstimators,
+          historicalData: cleanHistoricalData
+        });
       } catch (error) {
         console.error('Error loading saved data:', error);
       }
@@ -276,7 +314,7 @@ const EstimatorKPITracker: React.FC = () => {
                   estimator={estimatorKey}
                   estimatorName={estimatorName}
                   data={kpiData.estimators[estimatorKey] || []}
-                  onDataUpdate={(data) => updateEstimatorData(estimatorKey, data)}
+                  onDataUpdate={(data) => updateEstimatorData(estimatorName, data)}
                   weekRange={`${weekRange.start} - ${weekRange.end}`}
                 />
               </TabsContent>
