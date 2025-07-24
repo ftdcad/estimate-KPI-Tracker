@@ -352,20 +352,30 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="text"
+                      type="number"
+                      step="0.01"
                       value={entry.timeHours ?? ''}
-                      onChange={(e) => updateEntry(index, 'timeHours', e.target.value ? parseFloat(e.target.value) : null)}
+                      onChange={(e) => updateEntry(index, 'timeHours', e.target.value)}
+                      onBlur={(e) => {
+                        const numValue = e.target.value ? parseFloat(e.target.value) : null;
+                        updateEntry(index, 'timeHours', numValue);
+                      }}
                       className={cn("border-0 h-8 text-right", hasFieldError(entry, 'timeHours') && "ring-2 ring-red-500")}
-                      placeholder="0.0"
+                      placeholder="0.15"
                     />
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="text"
+                      type="number"
+                      step="0.01"
                       value={entry.revisionTimeHours ?? ''}
-                      onChange={(e) => updateEntry(index, 'revisionTimeHours', e.target.value ? parseFloat(e.target.value) : null)}
+                      onChange={(e) => updateEntry(index, 'revisionTimeHours', e.target.value)}
+                      onBlur={(e) => {
+                        const numValue = e.target.value ? parseFloat(e.target.value) : null;
+                        updateEntry(index, 'revisionTimeHours', numValue);
+                      }}
                       className="border-0 h-8 text-right"
-                      placeholder="0.0"
+                      placeholder="0.15"
                     />
                   </td>
                   <td className="border border-border p-1">
