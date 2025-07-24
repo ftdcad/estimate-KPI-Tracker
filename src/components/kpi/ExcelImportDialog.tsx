@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { EstimateEntry } from '@/types/kpi';
 import * as XLSX from 'xlsx';
@@ -9,12 +10,14 @@ import { Upload } from 'lucide-react';
 
 interface ExcelImportDialogProps {
   onImport: (estimatorName: string, data: EstimateEntry[]) => void;
+  existingEstimators?: string[];
 }
 
-export const ExcelImportDialog = ({ onImport }: ExcelImportDialogProps) => {
+export const ExcelImportDialog = ({ onImport, existingEstimators = [] }: ExcelImportDialogProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [previewData, setPreviewData] = useState<EstimateEntry[]>([]);
   const [estimatorName, setEstimatorName] = useState('');
+  const [isNewEstimator, setIsNewEstimator] = useState(false);
   const { toast } = useToast();
 
   const convertTimeToHours = (timeStr: string): number | null => {
@@ -138,12 +141,36 @@ export const ExcelImportDialog = ({ onImport }: ExcelImportDialogProps) => {
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Estimator Name:</label>
-            <Input
-              value={estimatorName}
-              onChange={(e) => setEstimatorName(e.target.value)}
-              placeholder="Enter estimator name"
-            />
+            <label className="block text-sm font-medium mb-2">Select Estimator:</label>
+            <div className="space-y-2">
+              <Select value={isNewEstimator ? "new" : estimatorName} onValueChange={(value) => {
+                if (value === "new") {
+                  setIsNewEstimator(true);
+                  setEstimatorName('');
+                } else {
+                  setIsNewEstimator(false);
+                  setEstimatorName(value);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose existing estimator or add new..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingEstimators.map((name) => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                  <SelectItem value="new">+ Add New Estimator</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              {isNewEstimator && (
+                <Input
+                  value={estimatorName}
+                  onChange={(e) => setEstimatorName(e.target.value)}
+                  placeholder="Enter new estimator name"
+                />
+              )}
+            </div>
           </div>
           
           <div>

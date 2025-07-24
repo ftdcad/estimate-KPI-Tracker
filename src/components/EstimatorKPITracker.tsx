@@ -49,13 +49,23 @@ const EstimatorKPITracker: React.FC = () => {
   }, [kpiData]);
 
   const updateEstimatorData = (estimator: string, data: EstimateEntry[]) => {
-    setKPIData(prev => ({
-      ...prev,
-      estimators: {
-        ...prev.estimators,
-        [estimator]: data
-      }
-    }));
+    const estimatorKey = getEstimatorKey(estimator);
+    
+    setKPIData(prev => {
+      // Add estimator to list if it doesn't exist
+      const updatedEstimatorList = prev.estimatorList.includes(estimator) 
+        ? prev.estimatorList 
+        : [...prev.estimatorList, estimator];
+      
+      return {
+        ...prev,
+        estimators: {
+          ...prev.estimators,
+          [estimatorKey]: data
+        },
+        estimatorList: updatedEstimatorList
+      };
+    });
   };
 
   const addEstimator = (estimatorName: string) => {
@@ -206,7 +216,10 @@ const EstimatorKPITracker: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <div></div>
           <div className="flex gap-2">
-            <ExcelImportDialog onImport={updateEstimatorData} />
+            <ExcelImportDialog 
+              onImport={updateEstimatorData} 
+              existingEstimators={kpiData.estimatorList}
+            />
             <ManageEstimatorDialog
               existingEstimators={kpiData.estimatorList}
               onAddEstimator={addEstimator}
