@@ -65,23 +65,63 @@ export const ExcelImportDialog = ({ onImport, existingEstimators = [] }: ExcelIm
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        const transformedData: EstimateEntry[] = jsonData.map((row: any, index) => ({
-          id: `import-${Date.now()}-${index}`,
-          date: row.Date ? new Date(row.Date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-          fileNumber: row['File Number'] || row['File #'] || '',
-          clientName: row['Client Name'] || row.Client || '',
-          peril: row.Peril || null,
-          severity: row.Severity ? parseInt(row.Severity) as 1 | 2 | 3 | 4 | 5 : null,
-          timeHours: convertTimeToHours(row['Time on File'] || row.Time || ''),
-          revisionTimeHours: convertTimeToHours(row['Revision Time'] || ''),
-          estimateValue: row['Estimate Value'] || row.Value ? parseFloat(row['Estimate Value'] || row.Value) : null,
-          revisions: row.Revisions ? parseInt(row.Revisions) : null,
-          status: mapStatus(row.Status || ''),
-          notes: row.Notes || '',
-          actualSettlement: null,
-          settlementDate: null,
-          isSettled: false
-        }));
+        // Transform the data to match our EstimateEntry interface with date header support
+        const transformedData: EstimateEntry[] = [];
+        let currentDate = new Date().toISOString().split('T')[0]; // Default to today
+        
+        // Date header patterns: "5/19 Estimates", "5/20", "MM/DD Estimates", etc.
+        const dateHeaderPattern = /^(\d{1,2}\/\d{1,2}|\d{1,2}-\d{1,2})(\s+estimates?)?$/i;
+        
+        for (let i = 0; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          
+          // Skip completely empty rows
+          const rowValues = Object.values(row).filter(val => val !== null && val !== undefined && val !== '');
+          if (rowValues.length === 0) continue;
+          
+          // Check if this row is a date header
+          const firstCellValue = String(Object.values(row)[0] || '').trim();
+          if (dateHeaderPattern.test(firstCellValue)) {
+            // Extract date from header (e.g., "5/19" -> "2024-05-19")
+            const dateMatch = firstCellValue.match(/(\d{1,2})\/(\d{1,2})/);
+            if (dateMatch) {
+              const month = dateMatch[1].padStart(2, '0');
+              const day = dateMatch[2].padStart(2, '0');
+              const year = new Date().getFullYear(); // Use current year
+              currentDate = `${year}-${month}-${day}`;
+            }
+            continue; // Skip to next row
+          }
+          
+          // Check if this row contains actual estimate data
+          const rowData = row as any;
+          const hasFileNumber = rowData['File Number'] || rowData['File #'] || rowData.FileNumber;
+          const hasClientName = rowData['Client Name'] || rowData.Client || rowData.ClientName;
+          
+          // Only process rows that have at least a file number or client name
+          if (!hasFileNumber && !hasClientName) continue;
+          
+          // Create estimate entry
+          const entry: EstimateEntry = {
+            id: `import-${Date.now()}-${i}`,
+            date: currentDate,
+            fileNumber: String(hasFileNumber || ''),
+            clientName: String(hasClientName || ''),
+            peril: rowData.Peril || null,
+            severity: rowData.Severity ? parseInt(rowData.Severity) as 1 | 2 | 3 | 4 | 5 : null,
+            timeHours: convertTimeToHours(rowData['Time on File'] || rowData.Time || rowData.TimeHours || ''),
+            revisionTimeHours: convertTimeToHours(rowData['Revision Time'] || rowData.RevisionTime || ''),
+            estimateValue: rowData['Estimate Value'] || rowData.Value || rowData.EstimateValue ? parseFloat(rowData['Estimate Value'] || rowData.Value || rowData.EstimateValue) : null,
+            revisions: rowData.Revisions ? parseInt(rowData.Revisions) : null,
+            status: mapStatus(rowData.Status || ''),
+            notes: String(rowData.Notes || ''),
+            actualSettlement: null,
+            settlementDate: null,
+            isSettled: false
+          };
+          
+          transformedData.push(entry);
+        }
 
         setPreviewData(transformedData);
         toast({
