@@ -189,21 +189,51 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="mb-4">
+            <p className="text-sm text-muted-foreground flex items-center">
+              <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+              Required fields
+            </p>
+          </div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse border border-border">
             <thead>
               <tr className="bg-primary text-primary-foreground">
                 <th className="border border-border p-2 w-10">✓</th>
-                <th className="border border-border p-2 w-24">Date <span className="text-red-400">*</span></th>
-                <th className="border border-border p-2 w-32">File Number <span className="text-red-400">*</span></th>
-                <th className="border border-border p-2 w-40">Client Name <span className="text-red-400">*</span></th>
-                <th className="border border-border p-2 w-28">Peril <span className="text-red-400">*</span></th>
-                <th className="border border-border p-2 w-20">Severity <span className="text-red-400">*</span></th>
-                <th className="border border-border p-2 w-24">Time (hrs) <span className="text-red-400">*</span></th>
+                <th className="border border-border p-2 w-24">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Date
+                </th>
+                <th className="border border-border p-2 w-32">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  File Number
+                </th>
+                <th className="border border-border p-2 w-40">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Client Name
+                </th>
+                <th className="border border-border p-2 w-28">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Peril
+                </th>
+                <th className="border border-border p-2 w-20">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Severity
+                </th>
+                <th className="border border-border p-2 w-24">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Time (hrs)
+                </th>
                 <th className="border border-border p-2 w-24">Rev Time</th>
-                <th className="border border-border p-2 w-28">Est. Value <span className="text-red-400">*</span></th>
+                <th className="border border-border p-2 w-28">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Est. Value
+                </th>
                 <th className="border border-border p-2 w-20">Revisions</th>
-                <th className="border border-border p-2 w-28">Status <span className="text-red-400">*</span></th>
+                <th className="border border-border p-2 w-28">
+                  <span className="inline-block w-2 h-2 bg-destructive rounded-full mr-2"></span>
+                  Status
+                </th>
                 <th className="border border-border p-2 w-36">Notes</th>
               </tr>
             </thead>
