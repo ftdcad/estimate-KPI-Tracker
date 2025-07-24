@@ -25,7 +25,7 @@ const metricConfigs: MetricConfig[] = [
     id: 'dollarsPerHour',
     label: 'Estimated Dollars Per Hour',
     icon: <DollarSign className="w-5 h-5" />,
-    formatter: (value) => `${value.toLocaleString()}/hr`,
+    formatter: (value) => `$${value.toFixed(2)}/hr`,
     color: 'text-green-600'
   },
   {
