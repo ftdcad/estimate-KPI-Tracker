@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trash2, Save, Calculator, CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { EstimateEntry, PERIL_OPTIONS } from '../../types/kpi';
@@ -253,8 +254,26 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                 <th className="border border-border p-2 w-40">Client Name</th>
                 <th className="border border-border p-2 w-28">Peril</th>
                 <th className="border border-border p-2 w-20">Severity</th>
-                <th className="border border-border p-2 w-24">Hours</th>
-                <th className="border border-border p-2 w-24">Rev Time</th>
+                <th className="border border-border p-2 w-24">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>Hours</TooltipTrigger>
+                      <TooltipContent>
+                        <p>Time conversion: 0.25 = 15min, 0.5 = 30min, 0.75 = 45min, 1.0 = 60min</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
+                <th className="border border-border p-2 w-24">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>Rev Time</TooltipTrigger>
+                      <TooltipContent>
+                        <p>Time conversion: 0.25 = 15min, 0.5 = 30min, 0.75 = 45min, 1.0 = 60min</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
                 <th className="border border-border p-2 w-28">Est. Value</th>
                 <th className="border border-border p-2 w-20">Revisions</th>
                 <th className="border border-border p-2 w-28">Status</th>
