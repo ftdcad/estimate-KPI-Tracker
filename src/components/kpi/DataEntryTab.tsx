@@ -39,7 +39,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       date: new Date().toISOString().split('T')[0],
       fileNumber: '',
       clientName: '',
-      peril: null,
+      peril: null, // Changed: No longer auto-populates to "Wind"
       severity: null,
       timeHours: null,
       revisionTimeHours: null,
@@ -56,7 +56,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
   const validateEntry = (entry: EstimateEntry): string[] => {
     const errors: string[] = [];
     
-    if (!entry.date) errors.push('Date');
+    // Removed Date validation since it auto-populates to today
     if (!entry.fileNumber.trim()) errors.push('File Number');
     if (!entry.clientName.trim()) errors.push('Client Name');
     if (!entry.peril) errors.push('Peril');
@@ -73,7 +73,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     if (!validationErrors.has(entry.id)) return false;
     
     switch (field) {
-      case 'date': return !entry.date;
+      // Removed date case since it's no longer validated
       case 'fileNumber': return !entry.fileNumber.trim();
       case 'clientName': return !entry.clientName.trim();
       case 'peril': return !entry.peril;
@@ -241,7 +241,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       type="date"
                       value={entry.date}
                       onChange={(e) => updateEntry(index, 'date', e.target.value)}
-                      className={cn("border-0 h-8", hasFieldError(entry, 'date') && "ring-2 ring-red-500")}
+                      className="border-0 h-8"
                     />
                   </td>
                   <td className="border border-border p-1">
