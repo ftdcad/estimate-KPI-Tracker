@@ -59,7 +59,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     // Removed Date validation since it auto-populates to today
     if (!entry.fileNumber.trim()) errors.push('File Number');
     if (!entry.clientName.trim()) errors.push('Client Name');
-    if (!entry.peril) errors.push('Peril');
+    if (!entry.peril || entry.peril.trim() === '') errors.push('Peril');
     if (!entry.severity) errors.push('Severity');
     if (!entry.timeHours || entry.timeHours <= 0) errors.push('Hours');
     if (!entry.estimateValue || entry.estimateValue <= 0) errors.push('Estimated Value');
@@ -76,7 +76,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       // Removed date case since it's no longer validated
       case 'fileNumber': return !entry.fileNumber.trim();
       case 'clientName': return !entry.clientName.trim();
-      case 'peril': return !entry.peril;
+      case 'peril': return !entry.peril || entry.peril.trim() === '';
       case 'severity': return !entry.severity;
       case 'timeHours': return !entry.timeHours || entry.timeHours <= 0;
       case 'estimateValue': return !entry.estimateValue || entry.estimateValue <= 0;
@@ -268,10 +268,10 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'peril') && "ring-2 ring-red-500")}>
                         <SelectValue placeholder="" />
                       </SelectTrigger>
-                      <SelectContent>
+                       <SelectContent>
                         {PERIL_OPTIONS.map((peril) => (
                           <SelectItem key={peril} value={peril}>
-                            {peril}
+                            {peril || 'Select Peril...'}
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -1,4 +1,5 @@
 export const PERIL_OPTIONS = [
+  '',
   'Wind',
   'Hail', 
   'Hurricane',
@@ -12,6 +13,9 @@ export const PERIL_OPTIONS = [
 ] as const;
 
 export type PerilType = typeof PERIL_OPTIONS[number];
+
+// Helper type that excludes empty string for actual peril values
+export type ActualPerilType = Exclude<PerilType, ''>;
 
 export interface EstimateEntry {
   id: string;
