@@ -95,7 +95,7 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({ data, esti
   const currentValue = calculateMetricValue(selectedMetric);
 
   return (
-    <Card className="mb-6 bg-gradient-to-r from-background to-muted/20 border-border">
+    <Card className="h-full bg-gradient-card shadow-medium border-0">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-foreground">
