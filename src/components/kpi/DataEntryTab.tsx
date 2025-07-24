@@ -37,9 +37,22 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     return `${year}-${month}-${day}`;
   };
 
-  // Initialize with one empty row if no data
+  // Initialize with one empty row if no data, also normalize existing data
   if (data.length === 0) {
     onDataUpdate([createEmptyEntry()]);
+  } else {
+    // Normalize existing data to ensure all string fields are actually strings
+    const normalizedData = data.map(entry => ({
+      ...entry,
+      fileNumber: entry.fileNumber || '',
+      clientName: entry.clientName || '',
+      notes: entry.notes || ''
+    }));
+    
+    // Update data if it was normalized
+    if (JSON.stringify(normalizedData) !== JSON.stringify(data)) {
+      onDataUpdate(normalizedData);
+    }
   }
 
   function createEmptyEntry(): EstimateEntry {
@@ -167,6 +180,12 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
 
   const updateEntry = (index: number, field: keyof EstimateEntry, value: any) => {
     const newData = [...data];
+    
+    // Ensure data integrity - normalize string fields
+    if (field === 'fileNumber' || field === 'clientName' || field === 'notes') {
+      value = value || '';
+    }
+    
     newData[index] = { ...newData[index], [field]: value };
     onDataUpdate(newData);
     
