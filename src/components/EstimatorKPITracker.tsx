@@ -145,6 +145,31 @@ const EstimatorKPITracker: React.FC = () => {
     });
   };
 
+  const clearEstimatorData = (estimatorName: string) => {
+    const estimatorKey = estimatorName.toLowerCase().replace(/\s+/g, '');
+    
+    setKPIData(prev => {
+      const newEstimators = { ...prev.estimators };
+      const newHistoricalData = { ...prev.historicalData };
+      
+      // Clear current week data but keep the estimator key
+      newEstimators[estimatorKey] = [];
+      
+      // Clear historical data for this estimator
+      Object.keys(newHistoricalData).forEach(week => {
+        if (newHistoricalData[week][estimatorKey]) {
+          newHistoricalData[week][estimatorKey] = [];
+        }
+      });
+      
+      return {
+        ...prev,
+        estimators: newEstimators,
+        historicalData: newHistoricalData
+      };
+    });
+  };
+
   const getEstimatorKey = (estimatorName: string) => {
     return estimatorName.toLowerCase().replace(/\s+/g, '');
   };
@@ -219,6 +244,7 @@ const EstimatorKPITracker: React.FC = () => {
             onAddEstimator={addEstimator}
             onEditEstimator={editEstimator}
             onRemoveEstimator={removeEstimator}
+            onClearEstimatorData={clearEstimatorData}
           />
         </div>
 

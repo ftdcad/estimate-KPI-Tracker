@@ -22,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Settings, Plus, Edit, Trash } from 'lucide-react';
+import { Settings, Plus, Edit, Trash, Eraser } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ManageEstimatorDialogProps {
@@ -30,26 +30,33 @@ interface ManageEstimatorDialogProps {
   onAddEstimator: (estimatorName: string) => void;
   onEditEstimator: (oldName: string, newName: string) => void;
   onRemoveEstimator: (estimatorName: string) => void;
+  onClearEstimatorData: (estimatorName: string) => void;
 }
 
-type DialogMode = 'add' | 'edit' | 'remove';
+type DialogMode = 'add' | 'edit' | 'remove' | 'clear';
 
 const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
   existingEstimators,
   onAddEstimator,
   onEditEstimator,
   onRemoveEstimator,
+  onClearEstimatorData,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [mode, setMode] = useState<DialogMode>('add');
   const [estimatorName, setEstimatorName] = useState('');
   const [selectedEstimator, setSelectedEstimator] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [password, setPassword] = useState('');
+  const [showPasswordError, setShowPasswordError] = useState(false);
   const { toast } = useToast();
 
   const resetForm = () => {
     setEstimatorName('');
     setSelectedEstimator('');
+    setPassword('');
+    setShowPasswordError(false);
     setMode('add');
   };
 
@@ -64,6 +71,8 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
     setMode(newMode);
     setEstimatorName('');
     setSelectedEstimator('');
+    setPassword('');
+    setShowPasswordError(false);
   };
 
   const handleEstimatorSelect = (estimator: string) => {
@@ -186,11 +195,71 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
     setIsOpen(false);
   };
 
+  const handleClearData = () => {
+    if (!selectedEstimator) {
+      toast({
+        title: "No Estimator Selected",
+        description: "Please select an estimator to clear data for.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setShowClearConfirm(true);
+  };
+
+  const validatePassword = () => {
+    if (password === '1950') {
+      return true;
+    } else {
+      setShowPasswordError(true);
+      toast({
+        title: "Incorrect Password",
+        description: "Please enter the correct password to clear data.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const confirmClearData = () => {
+    if (!validatePassword()) return;
+
+    // Count total entries being cleared
+    let totalEntries = 0;
+    const kpiData = JSON.parse(localStorage.getItem('kpi-tracker-data') || '{}');
+    const estimatorKey = selectedEstimator.toLowerCase().replace(/\s+/g, '');
+    
+    if (kpiData.estimators && kpiData.estimators[estimatorKey]) {
+      totalEntries += kpiData.estimators[estimatorKey].length;
+    }
+    
+    if (kpiData.historicalData) {
+      Object.keys(kpiData.historicalData).forEach(week => {
+        if (kpiData.historicalData[week][estimatorKey]) {
+          totalEntries += kpiData.historicalData[week][estimatorKey].length;
+        }
+      });
+    }
+
+    onClearEstimatorData(selectedEstimator);
+    
+    toast({
+      title: "Data Cleared",
+      description: `Successfully cleared ${totalEntries} entries for ${selectedEstimator}.`,
+    });
+
+    setShowClearConfirm(false);
+    resetForm();
+    setIsOpen(false);
+  };
+
   const getDialogTitle = () => {
     switch (mode) {
       case 'add': return 'Add New Estimator';
       case 'edit': return 'Edit Estimator';
       case 'remove': return 'Remove Estimator';
+      case 'clear': return 'Clear Estimator Data';
       default: return 'Manage Estimators';
     }
   };
@@ -200,7 +269,8 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
       case 'add': return 'Enter the name for the new estimator. They will get their own data entry tab and be included in all reports.';
       case 'edit': return 'Select an estimator and update their name. All existing data will be preserved.';
       case 'remove': return 'Select an estimator to remove from the system. This action will permanently delete all their data.';
-      default: return 'Add, edit, or remove estimators from the system.';
+      case 'clear': return 'Select an estimator to clear all their data. The estimator will remain in the system but all entries will be permanently deleted.';
+      default: return 'Add, edit, remove, or clear data for estimators in the system.';
     }
   };
 
@@ -256,11 +326,22 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
                 <Trash size={14} />
                 Remove
               </Button>
+              <Button
+                type="button"
+                variant={mode === 'clear' ? 'destructive' : 'outline'}
+                size="sm"
+                onClick={() => handleModeChange('clear')}
+                className="gap-1"
+                disabled={existingEstimators.length === 0}
+              >
+                <Eraser size={14} />
+                Clear Data
+              </Button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Estimator Selection for Edit/Remove */}
-              {(mode === 'edit' || mode === 'remove') && (
+              {/* Estimator Selection for Edit/Remove/Clear */}
+              {(mode === 'edit' || mode === 'remove' || mode === 'clear') && (
                 <div className="space-y-2">
                   <Label htmlFor="estimator-select">Select Estimator</Label>
                   <Select value={selectedEstimator} onValueChange={handleEstimatorSelect}>
@@ -294,6 +375,27 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
                 </div>
               )}
 
+              {/* Password Input for Clear Data */}
+              {mode === 'clear' && (
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password Required</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setShowPasswordError(false);
+                    }}
+                    placeholder="Enter password to clear data"
+                    className={showPasswordError ? 'border-destructive' : ''}
+                  />
+                  {showPasswordError && (
+                    <p className="text-sm text-destructive">Incorrect password</p>
+                  )}
+                </div>
+              )}
+
               {/* Remove Confirmation */}
               {mode === 'remove' && selectedEstimator && (
                 <div className="p-4 border border-destructive/20 bg-destructive/5 rounded-md">
@@ -302,6 +404,18 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
                   </p>
                   <p className="text-sm text-muted-foreground mt-1">
                     This action cannot be undone.
+                  </p>
+                </div>
+              )}
+
+              {/* Clear Data Warning */}
+              {mode === 'clear' && selectedEstimator && (
+                <div className="p-4 border border-yellow-500/20 bg-yellow-500/5 rounded-md">
+                  <p className="text-sm text-yellow-700 font-medium">
+                    Warning: This will clear all data for {selectedEstimator}.
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    The estimator will remain in the system but all entries will be deleted. This action cannot be undone.
                   </p>
                 </div>
               )}
@@ -318,6 +432,15 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
                     disabled={!selectedEstimator}
                   >
                     Remove Estimator
+                  </Button>
+                ) : mode === 'clear' ? (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    onClick={handleClearData}
+                    disabled={!selectedEstimator}
+                  >
+                    Clear All Data
                   </Button>
                 ) : (
                   <Button type="submit" disabled={mode === 'edit' && !selectedEstimator}>
@@ -349,6 +472,32 @@ const ManageEstimatorDialog: React.FC<ManageEstimatorDialogProps> = ({
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Yes, Remove Estimator
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear Data Confirmation Dialog */}
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Data for {selectedEstimator}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all data for {selectedEstimator} including:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>All current week entries</li>
+                <li>All historical data and performance records</li>
+                <li>All KPI metrics and reports</li>
+              </ul>
+              The estimator will remain in the system for future use, but all data will be cleared.
+              <br /><br />
+              <strong>This action cannot be undone.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPassword('')}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClearData} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Yes, Clear All Data
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
