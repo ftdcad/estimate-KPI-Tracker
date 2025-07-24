@@ -32,6 +32,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
   const [focusedEstimateInput, setFocusedEstimateInput] = useState<string | null>(null);
+  const [inputValues, setInputValues] = useState<{[key: string]: string}>({});
 
   // Helper function to get today's date in local timezone
   const getTodayLocalDate = (): string => {
@@ -415,7 +416,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                       type="text"
                       value={
                         focusedEstimateInput === entry.id 
-                          ? (entry.estimateValue?.toString() || '') 
+                          ? (inputValues[`${entry.id}_estimate`] ?? entry.estimateValue?.toString() ?? '') 
                           : (entry.estimateValue ? formatCurrency(entry.estimateValue) : '')
                       }
                       onFocus={() => setFocusedEstimateInput(entry.id)}
@@ -424,11 +425,11 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                         const cleanValue = e.target.value.replace(/,/g, '');
                         updateEntry(index, 'estimateValue', cleanValue ? parseFloat(cleanValue) : null);
                       }}
-                      onChange={(e) => {
-                        // During focus, allow typing without formatting
-                        const cleanValue = e.target.value.replace(/,/g, '');
-                        updateEntry(index, 'estimateValue', cleanValue ? parseFloat(cleanValue) : null);
-                      }}
+                       onChange={(e) => {
+                         // Store raw input value during typing
+                         const inputKey = `${entry.id}_estimate`;
+                         setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
+                       }}
                       className={cn("border-0 h-8 text-right", hasFieldError(entry, 'estimateValue') && "ring-2 ring-red-500")}
                       placeholder="0.00"
                     />
