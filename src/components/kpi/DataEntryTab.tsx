@@ -384,22 +384,32 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="text"
-                      value={inputValues[`${entry.id}_hours`] ?? entry.timeHours?.toString() ?? ''}
+                      value={inputValues[`${entry.id}_hours`] ?? (entry.timeHours?.toString() || '')}
                       onChange={(e) => {
-                        // Store raw input value during typing
                         const inputKey = `${entry.id}_hours`;
                         setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
                       }}
                       onBlur={(e) => {
-                        const numValue = e.target.value ? parseFloat(e.target.value) : null;
-                        updateEntry(index, 'timeHours', numValue);
-                        // Clear the input value after blur
                         const inputKey = `${entry.id}_hours`;
-                        setInputValues(prev => {
-                          const newValues = {...prev};
-                          delete newValues[inputKey];
-                          return newValues;
-                        });
+                        const rawValue = e.target.value.trim();
+                        
+                        if (rawValue === '') {
+                          updateEntry(index, 'timeHours', null);
+                        } else {
+                          const numValue = parseFloat(rawValue);
+                          if (!isNaN(numValue) && numValue >= 0) {
+                            updateEntry(index, 'timeHours', numValue);
+                          }
+                        }
+                        
+                        // Clear input state after processing
+                        setTimeout(() => {
+                          setInputValues(prev => {
+                            const newValues = {...prev};
+                            delete newValues[inputKey];
+                            return newValues;
+                          });
+                        }, 0);
                       }}
                       className={cn("border-0 h-8 text-right", hasFieldError(entry, 'timeHours') && "ring-2 ring-red-500")}
                       placeholder="0.15"
@@ -408,22 +418,32 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="text"
-                      value={inputValues[`${entry.id}_revtime`] ?? entry.revisionTimeHours?.toString() ?? ''}
+                      value={inputValues[`${entry.id}_revtime`] ?? (entry.revisionTimeHours?.toString() || '')}
                       onChange={(e) => {
-                        // Store raw input value during typing
                         const inputKey = `${entry.id}_revtime`;
                         setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
                       }}
                       onBlur={(e) => {
-                        const numValue = e.target.value ? parseFloat(e.target.value) : null;
-                        updateEntry(index, 'revisionTimeHours', numValue);
-                        // Clear the input value after blur
                         const inputKey = `${entry.id}_revtime`;
-                        setInputValues(prev => {
-                          const newValues = {...prev};
-                          delete newValues[inputKey];
-                          return newValues;
-                        });
+                        const rawValue = e.target.value.trim();
+                        
+                        if (rawValue === '') {
+                          updateEntry(index, 'revisionTimeHours', null);
+                        } else {
+                          const numValue = parseFloat(rawValue);
+                          if (!isNaN(numValue) && numValue >= 0) {
+                            updateEntry(index, 'revisionTimeHours', numValue);
+                          }
+                        }
+                        
+                        // Clear input state after processing
+                        setTimeout(() => {
+                          setInputValues(prev => {
+                            const newValues = {...prev};
+                            delete newValues[inputKey];
+                            return newValues;
+                          });
+                        }, 0);
                       }}
                       className="border-0 h-8 text-right"
                       placeholder="0.15"
