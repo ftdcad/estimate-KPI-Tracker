@@ -89,7 +89,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
     if (!entry.clientName || entry.clientName.trim() === '') errors.push('Client Name');
     if (!entry.peril || entry.peril.trim() === '') errors.push('Peril');
     if (!entry.severity) errors.push('Severity');
-    if (entry.timeHours === null || entry.timeHours === undefined) errors.push('Hours');
+    // Hours validation removed - allow any value including decimals
     if (!entry.estimateValue || entry.estimateValue <= 0) errors.push('Estimated Value');
     if (!entry.status) errors.push('Status');
     
@@ -106,7 +106,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
       case 'clientName': return !entry.clientName || entry.clientName.trim() === '';
       case 'peril': return !entry.peril || entry.peril.trim() === '';
       case 'severity': return !entry.severity;
-      case 'timeHours': return entry.timeHours === null || entry.timeHours === undefined;
+      case 'timeHours': return false; // No validation for hours field
       case 'estimateValue': return !entry.estimateValue || entry.estimateValue <= 0;
       case 'status': return !entry.status;
       default: return false;
