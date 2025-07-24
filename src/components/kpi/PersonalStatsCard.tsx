@@ -32,7 +32,7 @@ const metricConfigs: MetricConfig[] = [
     id: 'dollarsPerMinute',
     label: 'Dollars Per Minute',
     icon: <Clock className="w-5 h-5" />,
-    formatter: (value) => `${value.toLocaleString()}/min`,
+    formatter: (value) => `$${value.toFixed(2)}/min`,
     color: 'text-blue-600'
   },
   {
@@ -75,7 +75,11 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({ data, esti
       case 'dollarsPerHour':
         return metrics.dollarPerHour;
       case 'dollarsPerMinute':
-        return metrics.dollarPerHour / 60;
+        const totalValue = data.reduce((sum, entry) => sum + (entry.estimateValue || 0), 0);
+        const totalMinutes = data.reduce((sum, entry) => 
+          sum + ((entry.timeHours || 0) + (entry.revisionTimeHours || 0)) * 60, 0
+        );
+        return totalMinutes > 0 ? totalValue / totalMinutes : 0;
       case 'totalWeeklyValue':
         return data.reduce((sum, entry) => sum + (entry.estimateValue || 0), 0);
       case 'firstTimeApproval':
