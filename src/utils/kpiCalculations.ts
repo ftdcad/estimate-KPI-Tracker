@@ -42,6 +42,19 @@ export const calculateWeeklyMetrics = (entries: EstimateEntry[]): WeeklyMetrics 
   const totalHours = validEntries.reduce((sum, entry) => 
     sum + (entry.timeHours || 0) + (entry.revisionTimeHours || 0), 0
   );
+  
+  console.log('KPI Debug:', {
+    validEntries: validEntries.length,
+    totalValue,
+    totalHours,
+    entries: validEntries.map(e => ({
+      timeHours: e.timeHours,
+      revisionTimeHours: e.revisionTimeHours,
+      estimateValue: e.estimateValue,
+      severity: e.severity
+    }))
+  });
+  
   const dollarPerHour = totalHours > 0 ? totalValue / totalHours : 0;
 
   // Calculate severity breakdown
