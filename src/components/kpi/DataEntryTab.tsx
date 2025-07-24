@@ -266,12 +266,12 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                 <th className="border border-border p-2 w-40">Client Name</th>
                 <th className="border border-border p-2 w-28">Peril</th>
                 <th className="border border-border p-2 w-20">Severity</th>
-                <th className="border border-border p-2 w-24">
+                  <th className="border border-border p-2 w-24">
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger>Hours</TooltipTrigger>
+                      <TooltipTrigger>Time (Min)</TooltipTrigger>
                       <TooltipContent>
-                        <p>Time conversion: 0.25 = 15min, 0.5 = 30min, 0.75 = 45min, 1.0 = 60min</p>
+                        <p>Enter time in minutes (e.g., 15, 30, 45) - automatically converts to hours</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -279,9 +279,9 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                 <th className="border border-border p-2 w-24">
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger>Rev Time</TooltipTrigger>
+                      <TooltipTrigger>Rev Time (Min)</TooltipTrigger>
                       <TooltipContent>
-                        <p>Time conversion: 0.25 = 15min, 0.5 = 30min, 0.75 = 45min, 1.0 = 60min</p>
+                        <p>Enter revision time in minutes (e.g., 15, 30, 45) - automatically converts to hours</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -384,21 +384,23 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="text"
-                      value={inputValues[`${entry.id}_hours`] ?? (entry.timeHours?.toString() || '')}
+                      value={inputValues[`${entry.id}_minutes`] ?? (entry.timeHours ? Math.round(entry.timeHours * 60).toString() : '')}
                       onChange={(e) => {
-                        const inputKey = `${entry.id}_hours`;
+                        const inputKey = `${entry.id}_minutes`;
                         setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
                       }}
                       onBlur={(e) => {
-                        const inputKey = `${entry.id}_hours`;
+                        const inputKey = `${entry.id}_minutes`;
                         const rawValue = e.target.value.trim();
                         
                         if (rawValue === '') {
                           updateEntry(index, 'timeHours', null);
                         } else {
-                          const numValue = parseFloat(rawValue);
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            updateEntry(index, 'timeHours', numValue);
+                          const minutes = parseFloat(rawValue);
+                          if (!isNaN(minutes) && minutes >= 0) {
+                            // Convert minutes to hours
+                            const hours = minutes / 60;
+                            updateEntry(index, 'timeHours', hours);
                           }
                         }
                         
@@ -412,27 +414,29 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                         }, 0);
                       }}
                       className={cn("border-0 h-8 text-right", hasFieldError(entry, 'timeHours') && "ring-2 ring-red-500")}
-                      placeholder="0.15"
+                      placeholder="15"
                     />
                   </td>
                   <td className="border border-border p-1">
                     <Input
                       type="text"
-                      value={inputValues[`${entry.id}_revtime`] ?? (entry.revisionTimeHours?.toString() || '')}
+                      value={inputValues[`${entry.id}_revminutes`] ?? (entry.revisionTimeHours ? Math.round(entry.revisionTimeHours * 60).toString() : '')}
                       onChange={(e) => {
-                        const inputKey = `${entry.id}_revtime`;
+                        const inputKey = `${entry.id}_revminutes`;
                         setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
                       }}
                       onBlur={(e) => {
-                        const inputKey = `${entry.id}_revtime`;
+                        const inputKey = `${entry.id}_revminutes`;
                         const rawValue = e.target.value.trim();
                         
                         if (rawValue === '') {
                           updateEntry(index, 'revisionTimeHours', null);
                         } else {
-                          const numValue = parseFloat(rawValue);
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            updateEntry(index, 'revisionTimeHours', numValue);
+                          const minutes = parseFloat(rawValue);
+                          if (!isNaN(minutes) && minutes >= 0) {
+                            // Convert minutes to hours
+                            const hours = minutes / 60;
+                            updateEntry(index, 'revisionTimeHours', hours);
                           }
                         }
                         
@@ -446,7 +450,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                         }, 0);
                       }}
                       className="border-0 h-8 text-right"
-                      placeholder="0.15"
+                      placeholder="30"
                     />
                   </td>
                   <td className="border border-border p-1">
