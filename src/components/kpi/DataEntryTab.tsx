@@ -383,14 +383,23 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="number"
-                      step="0.25"
-                      min="0"
-                      value={entry.timeHours ?? ''}
-                      onChange={(e) => updateEntry(index, 'timeHours', e.target.value)}
+                      type="text"
+                      value={inputValues[`${entry.id}_hours`] ?? entry.timeHours?.toString() ?? ''}
+                      onChange={(e) => {
+                        // Store raw input value during typing
+                        const inputKey = `${entry.id}_hours`;
+                        setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
+                      }}
                       onBlur={(e) => {
                         const numValue = e.target.value ? parseFloat(e.target.value) : null;
                         updateEntry(index, 'timeHours', numValue);
+                        // Clear the input value after blur
+                        const inputKey = `${entry.id}_hours`;
+                        setInputValues(prev => {
+                          const newValues = {...prev};
+                          delete newValues[inputKey];
+                          return newValues;
+                        });
                       }}
                       className={cn("border-0 h-8 text-right", hasFieldError(entry, 'timeHours') && "ring-2 ring-red-500")}
                       placeholder="0.15"
@@ -398,14 +407,23 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   </td>
                   <td className="border border-border p-1">
                     <Input
-                      type="number"
-                      step="0.25"
-                      min="0"
-                      value={entry.revisionTimeHours ?? ''}
-                      onChange={(e) => updateEntry(index, 'revisionTimeHours', e.target.value)}
+                      type="text"
+                      value={inputValues[`${entry.id}_revtime`] ?? entry.revisionTimeHours?.toString() ?? ''}
+                      onChange={(e) => {
+                        // Store raw input value during typing
+                        const inputKey = `${entry.id}_revtime`;
+                        setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
+                      }}
                       onBlur={(e) => {
                         const numValue = e.target.value ? parseFloat(e.target.value) : null;
                         updateEntry(index, 'revisionTimeHours', numValue);
+                        // Clear the input value after blur
+                        const inputKey = `${entry.id}_revtime`;
+                        setInputValues(prev => {
+                          const newValues = {...prev};
+                          delete newValues[inputKey];
+                          return newValues;
+                        });
                       }}
                       className="border-0 h-8 text-right"
                       placeholder="0.15"
