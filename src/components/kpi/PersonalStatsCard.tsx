@@ -123,7 +123,7 @@ export const PersonalStatsCard: React.FC<PersonalStatsCardProps> = ({ data, esti
             {currentConfig.icon}
           </div>
           <div className="flex-1">
-            <p className="text-sm text-muted-foreground mb-1">{currentConfig.label}</p>
+            
             <p className={`text-3xl font-bold transition-all duration-300 ${currentConfig.color}`}>
               {currentConfig.formatter(currentValue)}
             </p>
