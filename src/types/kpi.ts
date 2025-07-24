@@ -1,5 +1,4 @@
 export const PERIL_OPTIONS = [
-  '',
   'Wind',
   'Hail', 
   'Hurricane',

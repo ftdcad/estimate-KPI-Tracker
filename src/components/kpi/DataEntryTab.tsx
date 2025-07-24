@@ -263,15 +263,16 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Select
                       value={entry.peril || ''}
-                      onValueChange={(value) => updateEntry(index, 'peril', value || null)}
+                      onValueChange={(value) => updateEntry(index, 'peril', value === 'none' ? null : value)}
                     >
                       <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'peril') && "ring-2 ring-red-500")}>
-                        <SelectValue placeholder="" />
+                        <SelectValue placeholder="Select peril" />
                       </SelectTrigger>
-                       <SelectContent>
+                      <SelectContent>
+                        <SelectItem value="none">Select Peril...</SelectItem>
                         {PERIL_OPTIONS.map((peril) => (
                           <SelectItem key={peril} value={peril}>
-                            {peril || 'Select Peril...'}
+                            {peril}
                           </SelectItem>
                         ))}
                       </SelectContent>
