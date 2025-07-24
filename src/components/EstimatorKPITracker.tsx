@@ -268,7 +268,7 @@ const EstimatorKPITracker: React.FC = () => {
         <Card className="mb-6 bg-gradient-card shadow-medium border-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-xl text-primary">
-              Week of {weekRange.start} - {weekRange.end}, 2025
+              Week of {weekRange.start} - {weekRange.end}
             </CardTitle>
             <CardDescription className="text-base">
               Performance tracking for the estimating department
