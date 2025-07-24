@@ -237,9 +237,10 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({
                   <td className="border border-border p-1">
                     <Input
                       type="date"
-                      value={entry.date}
-                      onChange={(e) => updateEntry(index, 'date', e.target.value)}
-                      className="border-0 h-8"
+                      value={new Date().toISOString().split('T')[0]}
+                      readOnly
+                      className="border-0 h-8 bg-muted/50 text-muted-foreground cursor-not-allowed"
+                      title="Date is automatically set to today"
                     />
                   </td>
                   <td className="border border-border p-1">
