@@ -14,6 +14,7 @@ import { SELECTABLE_STATUSES, STATUS_LABELS, STATUS_COLORS, ALLOWED_TRANSITIONS,
 import type { Estimate } from '@/types/estimate';
 import BlockerDialog from './BlockerDialog';
 import UnblockDialog from './UnblockDialog';
+import EstimateDetailPanel from './EstimateDetailPanel';
 import type { BlockerType } from '@/lib/status';
 
 interface DataEntryTabProps {
@@ -29,6 +30,10 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
   // Blocker dialog state
   const [blockerTarget, setBlockerTarget] = useState<Estimate | null>(null);
   const [unblockerTarget, setUnblockerTarget] = useState<Estimate | null>(null);
+
+  // Detail panel state
+  const [detailEstimate, setDetailEstimate] = useState<Estimate | null>(null);
+  const [createMode, setCreateMode] = useState(false);
 
   // Date range filter
   type DatePreset = 'today' | 'week' | 'month' | 'quarter' | 'custom' | 'all';
@@ -133,51 +138,8 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
 
   // ── CRUD ───────────────────────────────────────────────────
 
-  const handleAddRow = async () => {
-    try {
-      await addEstimate({
-        file_number: '',
-        client_name: '',
-        estimator_id: estimatorId,
-        estimator_name: estimatorName,
-        status: 'assigned',
-        date_received: new Date().toISOString(),
-        peril: null,
-        severity: null,
-        estimate_value: null,
-        carrier: '',
-        notes: '',
-        revisions: 0,
-        is_settled: false,
-        actual_settlement: null,
-        settlement_date: null,
-        claim_number: '',
-        policy_number: '',
-        loss_state: '',
-        loss_date: null,
-        carrier_adjuster: '',
-        carrier_adjuster_email: '',
-        carrier_adjuster_phone: '',
-        contractor_company: '',
-        contractor_rep: '',
-        contractor_rep_email: '',
-        contractor_rep_phone: '',
-        public_adjuster: '',
-        referral_source: '',
-        referral_source_rep: '',
-        rcv: null,
-        acv: null,
-        depreciation: null,
-        deductible: null,
-        net_claim: null,
-        overhead_and_profit: null,
-        property_type: null,
-        sla_target_hours: null,
-      });
-      toast({ title: 'New row added' });
-    } catch (err: any) {
-      toast({ title: 'Error adding row', description: err.message, variant: 'destructive' });
-    }
+  const handleAddRow = () => {
+    setCreateMode(true);
   };
 
   const handleFieldBlur = async (est: Estimate, field: keyof Estimate, rawValue: string) => {
@@ -407,15 +369,14 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
                         />
                       </td>
 
-                      {/* Client Name */}
-                      <td className="border border-border p-1">
-                        <Input
-                          value={getEditValue(est.id, 'client_name', est.client_name)}
-                          onChange={(e) => setEditValue(est.id, 'client_name', e.target.value)}
-                          onBlur={(e) => handleFieldBlur(est, 'client_name', e.target.value)}
-                          className="border-0 h-8"
-                          placeholder="Client name"
-                        />
+                      {/* Client Name (clickable → opens detail panel) */}
+                      <td
+                        className="border border-border p-1 cursor-pointer hover:bg-accent/30"
+                        onClick={() => setDetailEstimate(est)}
+                      >
+                        <span className="text-sm px-2 py-1 block truncate hover:underline">
+                          {est.client_name || <span className="text-muted-foreground italic">No name</span>}
+                        </span>
                       </td>
 
                       {/* Referral Source */}
@@ -648,6 +609,23 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
         blockerType={unblockerTarget?.current_blocker_type || ''}
         blockerReason={unblockerTarget?.current_blocker_reason || ''}
         blockedAt={unblockerTarget?.current_blocked_at || null}
+      />
+
+      {/* Estimate Detail Panel (slide-out sheet) */}
+      <EstimateDetailPanel
+        estimate={detailEstimate}
+        createMode={createMode}
+        estimatorId={estimatorId}
+        estimatorName={estimatorName}
+        onClose={() => {
+          setDetailEstimate(null);
+          setCreateMode(false);
+        }}
+        onCreated={(newEstimate) => {
+          // Switch from create mode to edit mode for the new estimate
+          setCreateMode(false);
+          setDetailEstimate(newEstimate);
+        }}
       />
     </>
   );

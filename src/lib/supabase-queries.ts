@@ -285,6 +285,46 @@ export async function ensureCarrier(name: string): Promise<void> {
   if (error && !error.message.includes('duplicate')) throw error;
 }
 
+// ── CLIENT NAME SEARCH (autocomplete) ───────────────────────────
+
+export interface ClientSuggestion {
+  client_name: string;
+  property_type: string | null;
+  loss_state: string;
+  loss_date: string | null;
+  carrier: string;
+  referral_source: string;
+  referral_source_rep: string;
+  contractor_company: string;
+  contractor_rep: string;
+  contractor_rep_email: string;
+  contractor_rep_phone: string;
+  file_number: string;
+  date_received: string;
+}
+
+export async function searchClientNames(search: string): Promise<ClientSuggestion[]> {
+  const { data, error } = await supabase
+    .from('estimates')
+    .select('client_name, property_type, loss_state, loss_date, carrier, referral_source, referral_source_rep, contractor_company, contractor_rep, contractor_rep_email, contractor_rep_phone, file_number, date_received')
+    .ilike('client_name', `%${search}%`)
+    .order('created_at', { ascending: false })
+    .limit(10);
+  if (error) throw error;
+
+  // Deduplicate by client_name — keep the most recent
+  const seen = new Set<string>();
+  const unique: ClientSuggestion[] = [];
+  for (const row of data ?? []) {
+    const key = (row.client_name as string).toLowerCase().trim();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(row as ClientSuggestion);
+    }
+  }
+  return unique;
+}
+
 // ── ACTIVE BLOCKERS (for dashboard counts) ─────────────────────
 
 export async function fetchActiveBlockers(): Promise<Blocker[]> {
