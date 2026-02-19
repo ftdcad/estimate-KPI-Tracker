@@ -2,9 +2,9 @@
 
 > Handoff document for every future Claude Code session. Read this FIRST, then read PDR_ESTIMATOR_KPI_V2.md.
 
-## STATUS: PHASE 1 LIVE — SESSION 3 COMPLETE (Feb 19, 2026)
+## STATUS: PHASE 1 LIVE — SESSION 4 COMPLETE (Feb 19, 2026)
 
-Session 3 built the EstimateDetailPanel (slide-out sheet), client autocomplete, and AI Assist CRM parser. All committed and pushed to main.
+Session 4 tuned the CRM parser regex with real ClaimWizard data (2 claims tested). All committed and pushed to main.
 
 **Rule: BINGO is the code word. No building until Frank says BINGO. Dev talk is free, code is gated.**
 
@@ -69,7 +69,7 @@ Session 3 built the EstimateDetailPanel (slide-out sheet), client autocomplete, 
 - `src/lib/crm-parser.ts` — regex parser, extracts 15+ fields
 - `src/components/kpi/CrmParseDialog.tsx` — two-step dialog (paste → preview table → apply)
 - No API key needed — all local regex. Bridge solution until CRM API (~12 months)
-- **Known issue**: Parser still misses some fields / picks up trailing CRM labels. Regex patterns need tuning with more real ClaimWizard samples. Improved once already, needs more iterations.
+- **Session 4 fix**: Tuned with 2 real ClaimWizard claims — fixed claim #, peril, severity, contractor rep, referral source. All 18 fields now parse correctly from tested samples.
 
 ### DataEntryTab Changes
 - Client name cells now **clickable** → opens panel in edit mode
@@ -81,19 +81,32 @@ Session 3 built the EstimateDetailPanel (slide-out sheet), client autocomplete, 
 
 ---
 
+## SESSION 4 BUILDS (Feb 19, 2026)
+
+### CRM Parser Regex Tuning
+- Tested with 2 real ClaimWizard claims (VA-2025100056 Brain, VA-2024110001 Calabrese)
+- **6 fixes applied to `src/lib/crm-parser.ts`**:
+  1. **Claim #**: `\d{5,}` → `[A-Z0-9][\dA-Z-]{4,}` — now matches letter prefixes (`A00007209637`) and dash suffixes (`057769748-01`)
+  2. **Peril**: `[A-Za-z]+` → `[A-Za-z/]+` — captures compound perils like "Wind/Hail"
+  3. **Peril normalizer**: Added `'wind/hail': 'Wind/Hail'` mapping (checked before individual entries)
+  4. **Severity**: Replaced two-line regex with `[^A-Za-z]+` skip — jumps over emoji/icon chars to the word
+  5. **Contractor Rep**: Compares with contractor company name, nulls out if they match (fixes "Rose Roofing" as person)
+  6. **Referral Source**: Replaced `\s` with space-only to stop at newlines, fixed broken `Source of Claim` fallback, added "Not Specified"/"None"/"N/A" filter
+- **Added `'Wind/Hail'` to PERIL_OPTIONS** in `src/types/kpi.ts`
+
+### Git
+- All committed and pushed to main
+
+---
+
 ## NEXT SESSION
 
-### Priority: CRM Parser Tuning
-- The regex parser needs real ClaimWizard data samples to improve accuracy
-- Ask Frank to paste raw Ctrl+A data from several different claims
-- Known issues: trailing labels on carrier, referral source, client name fields
-- DOL (Date of Loss) and Claim # sometimes missed depending on formatting
-
-### Additional Task Queue
+### Task Queue
 - SLA alerting system (sla_rules table exists but nothing reads it)
 - Time-in-stage color indicator
 - Scorecard CSV export
 - Timer context (onboarder has it, estimator doesn't yet)
+- CRM parser: test with more ClaimWizard samples as they come up
 
 ---
 

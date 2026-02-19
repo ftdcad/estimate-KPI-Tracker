@@ -100,6 +100,7 @@ function normalizePeril(text: string | null): string | null {
   if (!text) return null;
   const lower = text.toLowerCase().trim();
   const map: Record<string, string> = {
+    'wind/hail': 'Wind/Hail',
     'hail': 'Hail',
     'wind': 'Wind',
     'hurricane': 'Hurricane',
@@ -231,11 +232,11 @@ export function parseCrmData(raw: string): ParsedCrmData {
   ]);
   const lossDate = normalizeDate(lossDateRaw);
 
-  // Peril
+  // Peril — include / for compound perils like "Wind/Hail"
   const perilRaw = firstMatch(text, [
-    /Peril\s*\n([A-Za-z]+)/i,
-    /Peril:?\s*([A-Za-z]+)/i,
-    /Loss:\s*([A-Za-z]+)\s+on\s+/i,
+    /Peril\s*\n([A-Za-z/]+)/i,
+    /Peril:?\s*([A-Za-z/]+)/i,
+    /Loss:\s*([A-Za-z/]+)\s+on\s+/i,
   ]);
   const peril = normalizePeril(perilRaw);
 
@@ -248,14 +249,13 @@ export function parseCrmData(raw: string): ParsedCrmData {
   ]);
   const carrier = stripTrailingLabels(carrierRaw);
 
-  // Claim number — flexible: "Claim #:00201957173" or "Claim Number\n00201957173" or "Claim #\n00201957173"
+  // Claim number — flexible: alphanumeric with dashes (e.g. "A00007209637", "057769748-01")
   const claimNumber = firstMatch(text, [
-    /Claim\s*#\s*:?\s*\n?\s*(\d{5,})/i,
-    /Claim\s*Number\s*:?\s*\n?\s*(\d{5,})/i,
-    /Claim\s*#\s*(\d{5,})/i,
-    /Claim Number\s*(\d{5,})/i,
-    // Also match in sidebar "Claim #:00201957173" format (no space before digits)
-    /Claim\s*#:(\d{5,})/i,
+    /Claim\s*#\s*:?\s*\n?\s*([A-Z0-9][\dA-Z-]{4,})/i,
+    /Claim\s*Number\s*:?\s*\n?\s*([A-Z0-9][\dA-Z-]{4,})/i,
+    /Claim\s*#\s*([A-Z0-9][\dA-Z-]{4,})/i,
+    /Claim Number\s*([A-Z0-9][\dA-Z-]{4,})/i,
+    /Claim\s*#:([A-Z0-9][\dA-Z-]{4,})/i,
   ]);
 
   // Policy number — flexible: "Policy #\nHIP000520902" or "Policy #:HIP000520902"
@@ -271,10 +271,9 @@ export function parseCrmData(raw: string): ParsedCrmData {
   ]);
   const propertyType = normalizePropertyType(propertyTypeRaw);
 
-  // Severity
+  // Severity — skip emoji/icon chars between label and value
   const severityRaw = firstMatch(text, [
-    /Claim Severity\s*\n.*?\n([A-Za-z]+)/i,
-    /Severity\s*\n.*?([A-Za-z]+)/i,
+    /Claim Severity[^A-Za-z]+([A-Za-z]+)/i,
   ]);
   const severity = parseSeverity(severityRaw);
 
@@ -287,12 +286,15 @@ export function parseCrmData(raw: string): ParsedCrmData {
   ]);
   const contractorCompany = stripTrailingLabels(contractorCompanyRaw);
 
-  // Contractor rep — person name right before/after contractor company, or in Additional Contacts
-  const contractorRep = firstMatch(text, [
+  // Contractor rep — person name in Additional Contacts (not company name)
+  const contractorRepRaw = firstMatch(text, [
     /Additional Contacts\s*\n([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*\n/,
     // Person name right before a company email domain
     /\n([A-Z][a-z]+ [A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s*\n[a-z]+@/,
   ]);
+  // If matched name equals the contractor company, it's not a person — null it out
+  const contractorRep = contractorRepRaw && contractorCompany &&
+    contractorRepRaw.toLowerCase() === contractorCompany.toLowerCase() ? null : contractorRepRaw;
 
   // Contractor rep email — non-personal email near Additional Contacts or contractor section
   const contractorRepEmail = firstMatch(text, [
@@ -301,12 +303,15 @@ export function parseCrmData(raw: string): ParsedCrmData {
     /(?:Roofing|Restoration|Construction|Contracting)[\s\S]{0,200}?([a-zA-Z0-9._%+-]+@(?!gmail|yahoo|hotmail|outlook|aol|icloud|coastalclaims)[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/i,
   ]);
 
-  // Referral source — strip trailing role titles
+  // Referral source — use space (not \s) to prevent crossing newlines
   const referralSourceRaw = firstMatch(text, [
-    /Referral Source\s*\n([A-Z][a-z]+ [A-Za-z\s]+)/i,
-    /Source of Claim\s*\n.*?\n([A-Za-z][A-Za-z\s&.''-]+)/i,
+    /Referral Source\s*\n([A-Z][a-z]+ [A-Za-z ]+)/i,
+    /Source of Claim\s*\n([^\n]+)/i,
   ]);
-  const referralSource = stripTrailingLabels(referralSourceRaw);
+  // Filter "Not Specified" and similar null-like values
+  const referralSource = referralSourceRaw &&
+    /^(not specified|none|n\/a|unknown|-+)$/i.test(referralSourceRaw.trim())
+    ? null : stripTrailingLabels(referralSourceRaw);
 
   // Description of loss
   const descriptionOfLoss = firstMatch(text, [
