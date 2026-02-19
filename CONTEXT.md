@@ -2,11 +2,19 @@
 
 > Handoff document for every future Claude Code session. Read this FIRST, then read PDR_ESTIMATOR_KPI_V2.md.
 
-## STATUS: READY TO BUILD
+## STATUS: PHASE 1 BUILT — TESTING IN PROGRESS
 
-PDR complete. Architecture finalized. Waiting for BINGO.
+Phase 1 code is committed and pushed. Supabase tables are live. Referral source fields added (Feb 19).
 
 **Rule: BINGO is the code word. No building until Frank says BINGO. Dev talk is free, code is gated.**
+
+---
+
+## IMMEDIATE FIX NEEDED (next session)
+
+**DataEntryTab table column width bug**: After adding Ref. Source and Ref. Source Rep columns, the table has 14 columns and they're too cramped. The `min-w-[1400px]` fix was attempted but didn't resolve it. The first few columns (File #, Client, etc.) get cut off when data is entered. Needs a proper fix — likely increase min-width further or rethink which columns show by default vs. which are hidden/collapsible.
+
+**Supabase migration not yet run**: `supabase/migrations/20260219_add_referral_source.sql` adds `referral_source` and `referral_source_rep` columns to the `estimates` table. Must be run in the Supabase SQL Editor for project `esllnitrsljyvcduarrw` before these fields will save.
 
 ---
 
@@ -46,70 +54,66 @@ PDR complete. Architecture finalized. Waiting for BINGO.
 
 ---
 
-## CURRENT CODEBASE STATE (Lovable Build — July 2025)
+## WHAT WAS BUILT (Phase 1 — Feb 19, 2026)
 
-### Architecture
-- **Single mega-component**: `EstimatorKPITracker.tsx` (406 lines) manages ALL state, tabs, CRUD
-- **Data storage**: localStorage only — key `kpi-tracker-data`
-- **Supabase**: Client configured (`esllnitrsljyvcduarrw.supabase.co`) but **zero tables, zero queries**
-- **Auth**: None
-- **Routing**: Single page (`/` → Index.tsx → EstimatorKPITracker)
-- **Current estimators in data**: Nell, Brandon (placeholders)
-- **Last Lovable commit**: July 24, 2025
+### Supabase Tables (LIVE in project esllnitrsljyvcduarrw)
+- `estimates` — core record with split clock fields, blocker fields, lifecycle dates
+- `estimate_events` — audit trail (status changes, blockers, communications)
+- `blockers` — active blocker tracking with duration calculation
+- `time_logs` — work session tracking
+- `estimator_profiles` — per-estimator config + aggregated stats
+- `carriers` — verified/unverified reference data
+- `contractor_companies` + `contractor_reps` — contractor reference data
+- `carrier_adjusters` — carrier adjuster reference data
+- `sla_rules` — configurable SLA targets by severity (seeded with defaults)
+- Seed data: Nell Dalton + Brandon Leighton profiles, 5 SLA rules
 
-### Components (see PDR Section 2 for full status table)
+### Code Built
+- **Auth system**: Copied from onboarder — `src/lib/auth.ts`, `src/contexts/UserContext.tsx`, `src/types/user.ts`, `src/lib/mockUsers.ts`
+- **Status machine**: `src/lib/status.ts` — cyclical transitions (assigned → in-progress → blocked → back to in-progress, etc.)
+- **EstimatorContext**: `src/contexts/EstimatorContext.tsx` — React Query provider for all data operations
+- **Supabase queries**: `src/lib/supabase-queries.ts` — CRUD, blocker protocol (3-step atomic), status changes with lifecycle dates
+- **DataEntryTab**: Wired to Supabase with inline editing, auto-save on blur, carrier auto-suggest
+- **BlockerDialog + UnblockDialog**: 3-click blocker flow (Blocked → who → why)
+- **Dark navy theme**: CSS vars in index.css matching portal
+- **Mega-component broken up**: EstimatorKPITracker.tsx decomposed into provider + page
+- **Estimator profiles seeded**: Nell Dalton + Brandon Leighton
 
-| Component | Lines | Status |
-|---|---|---|
-| EstimatorKPITracker.tsx | 406 | BREAK UP into provider + page |
-| DataEntryTab.tsx | 556 | KEEP + wire to Supabase + add blocker button |
-| EstimatorScorecard.tsx | 212 | KEEP + add adjusted $/hr |
-| TeamDashboard.tsx | 207 | KEEP + add blocker summary |
-| AnalysisTab.tsx | 285 | KEEP + wire to real data |
-| HistoricalData.tsx | 271 | REWRITE with real queries |
-| LiquidityTab.tsx | 340 | KEEP + wire to Supabase |
-| PersonalStatsCard.tsx | 139 | KEEP + add split clock stats |
-| ManageEstimatorDialog.tsx | 509 | KEEP + wire to Supabase |
-| Documentation.tsx | 315 | UPDATE when done |
+### Fields Added (Feb 19 session)
+- `referral_source` (text) — who referred the claim
+- `referral_source_rep` (text) — the specific rep at the referral source
+- Added to: TypeScript types, DataEntryTab columns, handleAddRow template
+- **Migration SQL written but NOT YET RUN in Supabase** — see `supabase/migrations/20260219_add_referral_source.sql`
 
-### Existing Calculations (kpiCalculations.ts) — correct math, keep these
-- **Avg Days Held**: Days from entry to today (or settlement)
-- **Revision Rate**: Total revisions / estimate count
-- **First-Time Approval %**: Estimates with 0 revisions / total
-- **Dollar Per Hour**: Total estimate value / (time hours + revision hours)
-- **Team Overall Score**: Weighted — 40% dollar/hour, 30% revision rate, 20% approval rate, 10% efficiency
-
-### Known Issues
-| Issue | Severity | Fix |
-|---|---|---|
-| localStorage only — no persistence | HIGH | Migrate to Supabase (PDR Section 3) |
-| One mega-component manages everything | HIGH | Break up (PDR Phase 1 Step 8) |
-| No auth system | HIGH | Copy from onboarder (PDR Phase 1 Step 3) |
-| No blocker tracking | HIGH | Build blocker system (PDR Phase 1 Steps 6-7) |
-| Historical data is fake | MEDIUM | Replace with real queries (PDR Phase 2) |
-| Hardcoded password "1950" for clear-data | HIGH | Remove |
-| 60+ unused shadcn components | LOW | Clean in Phase 3 |
-| Light theme (doesn't match portal) | LOW | Dark navy swap (PDR Phase 1 Step 10) |
+### DataEntryTab Columns (current order)
+Checkbox | File # | Client | Ref. Source | Ref. Source Rep | Carrier | Peril | Sev | Hours | Est. Value | Rev | Status | Blocker | Notes
 
 ---
 
-## PHASE 1 BUILD ORDER (from PDR Section 10)
+## PHASE 1 BUILD ORDER (from PDR Section 10) — PROGRESS
 
-1. Create all Supabase tables
-2. Seed default SLA rules
-3. Copy auth pattern from onboarder
-4. Copy status machine pattern from onboarder
-5. Wire DataEntryTab to Supabase
-6. Build BlockerDialog and UnblockDialog
-7. Add status column and blocker button to DataEntryTab
-8. Break up EstimatorKPITracker.tsx mega-component
-9. Create estimator_profiles for existing estimators
-10. Dark navy theme
-11. Migrate existing data
+1. ~~Create all Supabase tables~~ DONE
+2. ~~Seed default SLA rules~~ DONE
+3. ~~Copy auth pattern from onboarder~~ DONE
+4. ~~Copy status machine pattern from onboarder~~ DONE
+5. ~~Wire DataEntryTab to Supabase~~ DONE
+6. ~~Build BlockerDialog and UnblockDialog~~ DONE
+7. ~~Add status column and blocker button to DataEntryTab~~ DONE
+8. ~~Break up EstimatorKPITracker.tsx mega-component~~ DONE
+9. ~~Create estimator_profiles for existing estimators~~ DONE
+10. ~~Dark navy theme~~ DONE
+11. Migrate existing data — SKIPPED (no real data to migrate yet)
 
-**Phase 1 DataEntryTab columns**: file number, client name, carrier (optional), peril, severity, estimate value (single number), time hours, status, blocker button. That's it.
+**Verify (NOT YET DONE)**: Estimator can enter estimate → work on it → click Blocked → enter reason → click Unblocked → see time split. Adjusted $/hr shows alongside raw $/hr on scorecard.
 
-**Verify**: Estimator can enter estimate → work on it → click Blocked → enter reason → click Unblocked → see time split. Adjusted $/hr shows alongside raw $/hr on scorecard.
+---
+
+## NEXT SESSION TASK QUEUE
+
+1. **FIX DataEntryTab column widths** — 14 columns too cramped. min-w-[1400px] didn't help. Try larger min-width or hide some columns behind a detail panel.
+2. **Run referral source migration** in Supabase SQL Editor
+3. **End-to-end test**: enter estimate → block → unblock → check split clock on scorecard
+4. Phase 2 planning (analytics dashboards) after e2e verification passes
 
 ---
 

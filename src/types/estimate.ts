@@ -25,6 +25,8 @@ export interface Estimate {
   contractor_rep_email: string;
   contractor_rep_phone: string;
   public_adjuster: string;
+  referral_source: string;
+  referral_source_rep: string;
   estimate_value: number | null;
   rcv: number | null;
   acv: number | null;

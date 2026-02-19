@@ -114,6 +114,8 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
         contractor_rep_email: '',
         contractor_rep_phone: '',
         public_adjuster: '',
+        referral_source: '',
+        referral_source_rep: '',
         rcv: null,
         acv: null,
         depreciation: null,
@@ -265,13 +267,15 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-border text-sm">
+            <table className="min-w-[1400px] w-full border-collapse border border-border text-sm">
               <thead>
                 <tr className="bg-primary text-primary-foreground">
                   <th className="border border-border p-2 w-8"></th>
-                  <th className="border border-border p-2">File #</th>
-                  <th className="border border-border p-2">Client</th>
-                  <th className="border border-border p-2">Carrier</th>
+                  <th className="border border-border p-2 w-28">File #</th>
+                  <th className="border border-border p-2 w-36">Client</th>
+                  <th className="border border-border p-2 w-36">Ref. Source</th>
+                  <th className="border border-border p-2 w-36">Ref. Source Rep</th>
+                  <th className="border border-border p-2 w-32">Carrier</th>
                   <th className="border border-border p-2 w-28">Peril</th>
                   <th className="border border-border p-2 w-16">Sev</th>
                   <th className="border border-border p-2 w-20">
@@ -323,6 +327,28 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
                           onBlur={(e) => handleFieldBlur(est, 'client_name', e.target.value)}
                           className="border-0 h-8"
                           placeholder="Client name"
+                        />
+                      </td>
+
+                      {/* Referral Source */}
+                      <td className="border border-border p-1">
+                        <Input
+                          value={getEditValue(est.id, 'referral_source', est.referral_source)}
+                          onChange={(e) => setEditValue(est.id, 'referral_source', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'referral_source', e.target.value)}
+                          className="border-0 h-8"
+                          placeholder="Referral source"
+                        />
+                      </td>
+
+                      {/* Referral Source Rep */}
+                      <td className="border border-border p-1">
+                        <Input
+                          value={getEditValue(est.id, 'referral_source_rep', est.referral_source_rep)}
+                          onChange={(e) => setEditValue(est.id, 'referral_source_rep', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'referral_source_rep', e.target.value)}
+                          className="border-0 h-8"
+                          placeholder="Rep name"
                         />
                       </td>
 
@@ -490,7 +516,7 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
 
                 {myEstimates.length === 0 && (
                   <tr>
-                    <td colSpan={12} className="border border-border p-8 text-center text-muted-foreground">
+                    <td colSpan={14} className="border border-border p-8 text-center text-muted-foreground">
                       No estimates yet. Click "Add Row" to enter your first estimate.
                     </td>
                   </tr>
