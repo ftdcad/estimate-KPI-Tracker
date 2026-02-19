@@ -2,19 +2,85 @@
 
 > Handoff document for every future Claude Code session. Read this FIRST, then read PDR_ESTIMATOR_KPI_V2.md.
 
-## STATUS: PHASE 1 BUILT — TESTING IN PROGRESS
+## STATUS: PHASE 1 LIVE — SESSION 2 COMPLETE (Feb 19, 2026)
 
-Phase 1 code is committed and pushed. Supabase tables are live. Referral source fields added (Feb 19).
+Phase 1 code is committed and pushed. Supabase tables are live with mock data. Referral source migration RUN. Layout fixed. Bragboard and date filter added. KPI data pipeline wired to real Supabase data.
 
 **Rule: BINGO is the code word. No building until Frank says BINGO. Dev talk is free, code is gated.**
 
 ---
 
-## IMMEDIATE FIX NEEDED (next session)
+## SESSION 2 BUILDS (Feb 19, 2026)
 
-**DataEntryTab table column width bug**: After adding Ref. Source and Ref. Source Rep columns, the table has 14 columns and they're too cramped. The `min-w-[1400px]` fix was attempted but didn't resolve it. The first few columns (File #, Client, etc.) get cut off when data is entered. Needs a proper fix — likely increase min-width further or rethink which columns show by default vs. which are hidden/collapsible.
+### Layout Fix
+- Table now uses `table-fixed` — columns respect declared pixel widths
+- Narrow columns (Sev 60px, Hours 70px, Rev 60px, etc.) stay tight
+- Text columns (Client, Ref. Source, Ref. Source Rep, Notes) share remaining space
+- Removed `min-w-[1400px]` — no more horizontal scrollbar
+- Container stays at `max-w-[95vw]` — full width, matching portal/onboarder
 
-**Supabase migration not yet run**: `supabase/migrations/20260219_add_referral_source.sql` adds `referral_source` and `referral_source_rep` columns to the `estimates` table. Must be run in the Supabase SQL Editor for project `esllnitrsljyvcduarrw` before these fields will save.
+### Date Range Filter
+- Button row in DataEntryTab header: Today | Past Week | Past Month | Past Quarter | All Time | Custom
+- Custom shows From/To date inputs
+- Defaults to Past Week
+- File count shows "X of Y files" (filtered vs total)
+- Filters on `date_received`
+
+### PersonalStatsCard (Bragboard)
+- Rendered above data entry table on each estimator's tab
+- Dropdown to switch metrics: $/Hour, $/Minute, Total Weekly Value, First-Time Approval Rate, Avg Severity, Estimates Completed
+- Uses real Supabase data via compatibility hook
+
+### KPI Data Pipeline Fix
+- Fixed key mismatch in `useKPIData.ts` — was using `user_id` ('brandon') as key but legacy components expected `display_name` lowercased ('brandonleighton')
+- Scorecards, Team Dashboard, Analysis tabs now show real data from Supabase
+
+### Supabase Changes
+- Referral source migration RUN: `referral_source` and `referral_source_rep` columns added
+- Mock data loaded: 14 estimates (7 Nell, 7 Brandon) with mix of statuses
+- 2 blocked estimates: Nell's (3 days — RED), Brandon's (12 hours — AMBER)
+- 8 carriers seeded (State Farm, Allstate, USAA, Travelers, Citizens, Liberty Mutual, Progressive, Hartford)
+
+### Git
+- Remote URL updated to `https://github.com/ftdcad/estimate-KPI-Tracker.git` (was pointing to old estimate-ace-score)
+- All changes committed and pushed to main
+
+---
+
+## NEXT SESSION — ESTIMATE DETAIL PANEL (Priority Build)
+
+### What Frank Wants
+An **EstimateDetailPanel** (slide-out Sheet, same pattern as onboarder's ClientDetailPanel) that opens when you:
+1. **Click a client name** in the table row
+2. **Click "Add Row"** (opens blank panel instead of adding empty table row)
+
+### Panel Sections (based on onboarder pattern)
+1. **Header** — File #, Status badge, Severity, Date Received
+2. **Client Info** — Client name with **autocomplete** (type "Mart" → finds "Martinez Residence" from prior estimates), property type, loss state, loss date
+3. **Referral Source** — Source name, Rep name
+4. **Carrier & Adjuster** — Carrier (autocomplete from carriers table), adjuster name/email/phone
+5. **Contractor** — Company, rep, email/phone
+6. **Estimate Values** — Est. Value, RCV, ACV, Depreciation, Deductible, Net Claim, O&P
+7. **Time & Blocker** — Active hours, blocked hours, revisions, blocker button
+8. **Notes**
+
+### Client Autocomplete / Parent-Child Linking
+- When typing a client name, query existing estimates for matches
+- If match found, pre-fill carrier, referral source, loss address from most recent estimate
+- New estimate becomes another "child" under the same client
+- Manager can see "Martinez Residence — 3 estimates across 2 months"
+- This is the parent (client) / child (estimate) / grandchild (events/blockers) hierarchy
+
+### Onboarder Pattern Reference
+- `onboarder-kpi-tracking-system/src/components/ClientDetailPanel.tsx` — Sheet, 55vw, collapsible sections
+- `onboarder-kpi-tracking-system/src/components/ExcelGrid.tsx` line 130 — click handler on client name
+- `onboarder-kpi-tracking-system/src/components/CollapsibleSection.tsx` — section wrapper
+- `onboarder-kpi-tracking-system/src/components/intake/IntakeForm.tsx` — editable form fields
+
+### Additional Task Queue
+- SLA alerting system (sla_rules table exists but nothing reads it)
+- Time-in-stage color indicator
+- Scorecard CSV export
 
 ---
 
@@ -36,121 +102,80 @@ Phase 1 code is committed and pushed. Supabase tables are live. Referral source 
 
 ---
 
-## DECISIONS MADE (Feb 18, 2026 architect session)
+## DECISIONS MADE (Feb 18-19, 2026)
 
 | Decision | Answer |
 |---|---|
 | Database | **Supabase** — NOT MongoDB. Guest house model, same as onboarder. |
-| Supabase project | **Separate from onboarder.** URL: `esllnitrsljyvcduarrw.supabase.co` (dedicated to this app, currently empty) |
+| Supabase project | **Separate from onboarder.** URL: `esllnitrsljyvcduarrw.supabase.co` |
 | Portal modifications | **NONE.** DEV TEAM manages the portal. Zero backend changes. Auth via URL params only. |
 | Core feature | **Split clock / blocker button.** Ships in Phase 1, not Phase 2. |
 | Entry mode | **Manual.** CRM integration ~12 months out. Estimators type in file details by hand. |
 | Who it measures | **Estimators only.** Not scopers, PAs, or contractors. Designed to extend later. |
-| Notifications | **Estimators only.** They own follow-up and escalation. |
-| Party fields | **Optional free text with auto-suggest.** Never block entry. Data builds over time. |
 | Theme | **Dark navy** matching portal. CSS vars from onboarder index.css. |
-| Severity targets | **Close to existing.** Sev 1–5, <30min to <12hr. Red flag thresholds use dual clock check. |
-| Estimate value | **Single number in Phase 1.** RCV/ACV/depreciation fields exist in schema but no UI until Phase 2. |
+| Layout | **95vw full-width** with table-fixed column distribution. |
+| Date filter default | **Past Week.** Options: Today, Week, Month, Quarter, All Time, Custom. |
+| Detail panel | **Sheet slide-out** (onboarder pattern). Opens on client name click OR Add Row. |
 
 ---
 
-## WHAT WAS BUILT (Phase 1 — Feb 19, 2026)
+## WHAT'S BUILT (cumulative)
 
-### Supabase Tables (LIVE in project esllnitrsljyvcduarrw)
-- `estimates` — core record with split clock fields, blocker fields, lifecycle dates
-- `estimate_events` — audit trail (status changes, blockers, communications)
-- `blockers` — active blocker tracking with duration calculation
+### Supabase Tables (LIVE)
+- `estimates` — 14 mock rows, split clock fields, blocker fields, referral source fields
+- `estimate_events` — audit trail
+- `blockers` — 2 active (Nell 3-day, Brandon 12-hour)
 - `time_logs` — work session tracking
-- `estimator_profiles` — per-estimator config + aggregated stats
-- `carriers` — verified/unverified reference data
-- `contractor_companies` + `contractor_reps` — contractor reference data
-- `carrier_adjusters` — carrier adjuster reference data
-- `sla_rules` — configurable SLA targets by severity (seeded with defaults)
-- Seed data: Nell Dalton + Brandon Leighton profiles, 5 SLA rules
+- `estimator_profiles` — Nell + Brandon seeded
+- `carriers` — 8 verified carriers seeded
+- `contractor_companies` + `contractor_reps` — empty, ready
+- `carrier_adjusters` — empty, ready
+- `sla_rules` — 5 severity-based defaults seeded
 
 ### Code Built
-- **Auth system**: Copied from onboarder — `src/lib/auth.ts`, `src/contexts/UserContext.tsx`, `src/types/user.ts`, `src/lib/mockUsers.ts`
-- **Status machine**: `src/lib/status.ts` — cyclical transitions (assigned → in-progress → blocked → back to in-progress, etc.)
-- **EstimatorContext**: `src/contexts/EstimatorContext.tsx` — React Query provider for all data operations
-- **Supabase queries**: `src/lib/supabase-queries.ts` — CRUD, blocker protocol (3-step atomic), status changes with lifecycle dates
-- **DataEntryTab**: Wired to Supabase with inline editing, auto-save on blur, carrier auto-suggest
-- **BlockerDialog + UnblockDialog**: 3-click blocker flow (Blocked → who → why)
-- **Dark navy theme**: CSS vars in index.css matching portal
-- **Mega-component broken up**: EstimatorKPITracker.tsx decomposed into provider + page
-- **Estimator profiles seeded**: Nell Dalton + Brandon Leighton
+- **Auth system**: `src/lib/auth.ts`, `src/contexts/UserContext.tsx`, `src/types/user.ts`, `src/lib/mockUsers.ts`
+- **Status machine**: `src/lib/status.ts` — cyclical transitions
+- **EstimatorContext**: `src/contexts/EstimatorContext.tsx` — React Query provider
+- **Supabase queries**: `src/lib/supabase-queries.ts` — CRUD, blocker protocol, status changes
+- **DataEntryTab**: table-fixed layout, date range filter, inline editing, carrier auto-suggest
+- **PersonalStatsCard**: Bragboard above each estimator's table ($/hr, approval rate, etc.)
+- **BlockerDialog + UnblockDialog**: 3-click blocker flow
+- **useKPIData compatibility hook**: Converts Supabase data → legacy format for Scorecards/TeamDashboard/Analysis
+- **Dark navy theme**: CSS vars in index.css
 
-### Fields Added (Feb 19 session)
-- `referral_source` (text) — who referred the claim
-- `referral_source_rep` (text) — the specific rep at the referral source
-- Added to: TypeScript types, DataEntryTab columns, handleAddRow template
-- **Migration SQL written but NOT YET RUN in Supabase** — see `supabase/migrations/20260219_add_referral_source.sql`
+### Legacy Components (working with real data now)
+- **EstimatorScorecard**: Per-estimator performance cards, severity breakdown
+- **TeamDashboard**: Leaderboard with weighted scoring (40% $/hr, 30% revision, 20% approval, 10% efficiency)
+- **PersonalStatsCard**: Dropdown metric card (6 metrics)
+- **AnalysisTab**: Red flags when $/hr < $10,000
+- **kpiCalculations.ts**: Core math engine (dollarPerHour, revisionRate, etc.)
 
-### DataEntryTab Columns (current order)
-Checkbox | File # | Client | Ref. Source | Ref. Source Rep | Carrier | Peril | Sev | Hours | Est. Value | Rev | Status | Blocker | Notes
-
----
-
-## PHASE 1 BUILD ORDER (from PDR Section 10) — PROGRESS
-
-1. ~~Create all Supabase tables~~ DONE
-2. ~~Seed default SLA rules~~ DONE
-3. ~~Copy auth pattern from onboarder~~ DONE
-4. ~~Copy status machine pattern from onboarder~~ DONE
-5. ~~Wire DataEntryTab to Supabase~~ DONE
-6. ~~Build BlockerDialog and UnblockDialog~~ DONE
-7. ~~Add status column and blocker button to DataEntryTab~~ DONE
-8. ~~Break up EstimatorKPITracker.tsx mega-component~~ DONE
-9. ~~Create estimator_profiles for existing estimators~~ DONE
-10. ~~Dark navy theme~~ DONE
-11. Migrate existing data — SKIPPED (no real data to migrate yet)
-
-**Verify (NOT YET DONE)**: Estimator can enter estimate → work on it → click Blocked → enter reason → click Unblocked → see time split. Adjusted $/hr shows alongside raw $/hr on scorecard.
+### What's FAKE / Not Yet Wired
+- **SLA alerting**: `sla_rules` table seeded but frontend doesn't read/enforce them
+- **Timer**: TimerContext not yet implemented (onboarder has it, estimator doesn't)
+- **AnalysisTab**: Uses legacy format but recommendations are generic
+- **LiquidityTab**: Settlement tracking — needs real settlement data
 
 ---
 
-## NEXT SESSION TASK QUEUE
+## PARENT/CHILD ROLE VISIBILITY
 
-1. **FIX DataEntryTab column widths** — 14 columns too cramped. min-w-[1400px] didn't help. Try larger min-width or hide some columns behind a detail panel.
-2. **Run referral source migration** in Supabase SQL Editor
-3. **End-to-end test**: enter estimate → block → unblock → check split clock on scorecard
-4. Phase 2 planning (analytics dashboards) after e2e verification passes
-
----
-
-## OPEN QUESTIONS (remaining)
-
-| # | Question | Blocks | Default If Unanswered |
-|---|---|---|---|
-| EQ1 | Estimator names + portal user ID mapping? | Phase 1 | **ANSWERED**: Nell Dalton (Lead Estimator) and Brandon Leighton (Estimator). Full roster in PDR Section 12. |
-| EQ3 | Start with known carriers/contractors or empty reference tables? | Phase 1 | **ANSWERED**: Empty + verified/unverified pattern. Estimators type freetext if no dropdown match → admin reviews/merges. See PDR Section 3.6. |
-| EQ6 | How does the portal embed this app? | Phase 1 | **ANSWERED**: Iframe. Separate deploy, portal loads via iframe, auth via URL params. Same as onboarder. |
-
-**Already answered:**
-- EQ2 (Supabase): Separate project — `esllnitrsljyvcduarrw` dedicated to this app
-- EQ4 (Timer): Manual entry with optional timer widget in Phase 2
-- EQ5 (Estimate value): Single number. RCV/ACV breakdown exists in schema, UI in Phase 2
-- EQ7 (Severity targets): Confirmed close to existing
+| Role | Sees | Test URL |
+|---|---|---|
+| superadmin (Frank) | All estimator tabs + shared tabs | `localhost:8080` (default) |
+| manager (Sarah) | All estimator tabs + shared tabs | `?userId=sarah&role=manager&userName=Sarah%20Manager` |
+| user (Nell) | Only her tab + shared tabs | `?userId=nell&role=user&userName=Nell%20Dalton` |
+| user (Brandon) | Only his tab + shared tabs | `?userId=brandon&role=user&userName=Brandon%20Leighton` |
 
 ---
 
 ## REFERENCE
 
-### Onboarder KPI (architecture patterns to copy)
-| Pattern | Onboarder File |
-|---|---|
-| Auth system | `onboarder-kpi-tracking-system/src/lib/auth.ts` |
-| User context | `onboarder-kpi-tracking-system/src/contexts/UserContext.tsx` |
-| Timer context | `onboarder-kpi-tracking-system/src/contexts/TimerContext.tsx` |
-| Status machine | `onboarder-kpi-tracking-system/src/status.ts` |
-| Types | `onboarder-kpi-tracking-system/src/types/onboarding.ts` |
-| Theme | `onboarder-kpi-tracking-system/src/index.css` |
-
 ### GitHub
-- **Personal**: ftdcad/estimate-KPI-Tracker
+- **Personal**: ftdcad/estimate-KPI-Tracker (remote URL updated)
 - **Coastal org**: TBD — will create Coastal-Claims-Services/estimator-kpi-tracker when ready
-- **Portal page name**: TBD
 
 ### Related Projects
-- **Onboarder KPI**: `C:\Users\FrankDalton\myProjects\onboarder-kpi-tracking-system` (architecture reference)
+- **Onboarder KPI**: `C:\Users\FrankDalton\myProjects\onboarder-kpi-tracking-system`
 - **Blueprint docs**: `C:\Users\FrankDalton\myProjects\kpi system blueprint`
 - **Portal**: portal.coastalclaims.net (DEV TEAM manages — DO NOT MODIFY)
