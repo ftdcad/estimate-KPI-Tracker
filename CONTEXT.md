@@ -2,9 +2,9 @@
 
 > Handoff document for every future Claude Code session. Read this FIRST, then read PDR_ESTIMATOR_KPI_V2.md.
 
-## STATUS: PHASE 1 LIVE — SESSION 2 COMPLETE (Feb 19, 2026)
+## STATUS: PHASE 1 LIVE — SESSION 3 COMPLETE (Feb 19, 2026)
 
-Phase 1 code is committed and pushed. Supabase tables are live with mock data. Referral source migration RUN. Layout fixed. Bragboard and date filter added. KPI data pipeline wired to real Supabase data.
+Session 3 built the EstimateDetailPanel (slide-out sheet), client autocomplete, and AI Assist CRM parser. All committed and pushed to main.
 
 **Rule: BINGO is the code word. No building until Frank says BINGO. Dev talk is free, code is gated.**
 
@@ -47,40 +47,53 @@ Phase 1 code is committed and pushed. Supabase tables are live with mock data. R
 
 ---
 
-## NEXT SESSION — ESTIMATE DETAIL PANEL (Priority Build)
+## SESSION 3 BUILDS (Feb 19, 2026)
 
-### What Frank Wants
-An **EstimateDetailPanel** (slide-out Sheet, same pattern as onboarder's ClientDetailPanel) that opens when you:
-1. **Click a client name** in the table row
-2. **Click "Add Row"** (opens blank panel instead of adding empty table row)
+### EstimateDetailPanel (slide-out sheet)
+- `src/components/kpi/EstimateDetailPanel.tsx` — 55vw Sheet, slides from right
+- **Two modes**: Edit (blur-save) and Create (explicit "Create Estimate" button, no phantom rows)
+- **8 collapsible sections**: Header (open), Client Info (open), Referral Source, Carrier & Adjuster, Contractor, Estimate Values, Time & Blocker, Notes
+- CollapsibleSection.tsx — reusable wrapper with ChevronRight rotation + defaultOpen prop
+- Time & Blocker section embeds existing BlockerDialog + UnblockDialog
 
-### Panel Sections (based on onboarder pattern)
-1. **Header** — File #, Status badge, Severity, Date Received
-2. **Client Info** — Client name with **autocomplete** (type "Mart" → finds "Martinez Residence" from prior estimates), property type, loss state, loss date
-3. **Referral Source** — Source name, Rep name
-4. **Carrier & Adjuster** — Carrier (autocomplete from carriers table), adjuster name/email/phone
-5. **Contractor** — Company, rep, email/phone
-6. **Estimate Values** — Est. Value, RCV, ACV, Depreciation, Deductible, Net Claim, O&P
-7. **Time & Blocker** — Active hours, blocked hours, revisions, blocker button
-8. **Notes**
+### Client Name Autocomplete
+- Popover + Command components in Client Info section
+- Types 3+ chars → ILIKE query on estimates table → shows dropdown of matches
+- Selecting a match pre-fills: carrier, referral source, loss state, contractor info
+- Shows "Pre-filled from Martinez Residence (Est #1042, Jan 2026)" indicator
+- Option B approach (string matching, no clients table — good for ~1 year)
 
-### Client Autocomplete / Parent-Child Linking
-- When typing a client name, query existing estimates for matches
-- If match found, pre-fill carrier, referral source, loss address from most recent estimate
-- New estimate becomes another "child" under the same client
-- Manager can see "Martinez Residence — 3 estimates across 2 months"
-- This is the parent (client) / child (estimate) / grandchild (events/blockers) hierarchy
+### AI Assist — CRM Parser
+- **Sparkle button** in panel header opens CrmParseDialog
+- Estimator Ctrl+A, Ctrl+C in ClaimWizard → paste → Parse → preview → Apply
+- `src/lib/crm-parser.ts` — regex parser, extracts 15+ fields
+- `src/components/kpi/CrmParseDialog.tsx` — two-step dialog (paste → preview table → apply)
+- No API key needed — all local regex. Bridge solution until CRM API (~12 months)
+- **Known issue**: Parser still misses some fields / picks up trailing CRM labels. Regex patterns need tuning with more real ClaimWizard samples. Improved once already, needs more iterations.
 
-### Onboarder Pattern Reference
-- `onboarder-kpi-tracking-system/src/components/ClientDetailPanel.tsx` — Sheet, 55vw, collapsible sections
-- `onboarder-kpi-tracking-system/src/components/ExcelGrid.tsx` line 130 — click handler on client name
-- `onboarder-kpi-tracking-system/src/components/CollapsibleSection.tsx` — section wrapper
-- `onboarder-kpi-tracking-system/src/components/intake/IntakeForm.tsx` — editable form fields
+### DataEntryTab Changes
+- Client name cells now **clickable** → opens panel in edit mode
+- "Add Row" button now opens **blank panel** in create mode (was: immediate DB insert)
+- `searchClientNames()` added to supabase-queries.ts for autocomplete
+
+### Git
+- All committed and pushed to main
+
+---
+
+## NEXT SESSION
+
+### Priority: CRM Parser Tuning
+- The regex parser needs real ClaimWizard data samples to improve accuracy
+- Ask Frank to paste raw Ctrl+A data from several different claims
+- Known issues: trailing labels on carrier, referral source, client name fields
+- DOL (Date of Loss) and Claim # sometimes missed depending on formatting
 
 ### Additional Task Queue
 - SLA alerting system (sla_rules table exists but nothing reads it)
 - Time-in-stage color indicator
 - Scorecard CSV export
+- Timer context (onboarder has it, estimator doesn't yet)
 
 ---
 
@@ -136,8 +149,12 @@ An **EstimateDetailPanel** (slide-out Sheet, same pattern as onboarder's ClientD
 - **Auth system**: `src/lib/auth.ts`, `src/contexts/UserContext.tsx`, `src/types/user.ts`, `src/lib/mockUsers.ts`
 - **Status machine**: `src/lib/status.ts` — cyclical transitions
 - **EstimatorContext**: `src/contexts/EstimatorContext.tsx` — React Query provider
-- **Supabase queries**: `src/lib/supabase-queries.ts` — CRUD, blocker protocol, status changes
-- **DataEntryTab**: table-fixed layout, date range filter, inline editing, carrier auto-suggest
+- **Supabase queries**: `src/lib/supabase-queries.ts` — CRUD, blocker protocol, status changes, client search
+- **DataEntryTab**: table-fixed layout, date range filter, inline editing, carrier auto-suggest, clickable client names
+- **EstimateDetailPanel**: Slide-out Sheet, 8 collapsible sections, create/edit modes, AI Assist button
+- **CollapsibleSection**: Reusable wrapper with chevron + defaultOpen
+- **CrmParseDialog + crm-parser**: ClaimWizard paste-and-parse, regex extraction, preview table
+- **Client autocomplete**: Popover + Command, ILIKE search, pre-fill from existing estimates
 - **PersonalStatsCard**: Bragboard above each estimator's table ($/hr, approval rate, etc.)
 - **BlockerDialog + UnblockDialog**: 3-click blocker flow
 - **useKPIData compatibility hook**: Converts Supabase data → legacy format for Scorecards/TeamDashboard/Analysis
