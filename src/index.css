@@ -2,113 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Modern gradient background */
-    --background: 210 100% 98%;
-    --foreground: 222 25% 15%;
+    --background: 230 25% 15%;
+    --foreground: 220 9% 87%;
 
-    /* Card styling with subtle gradient */
-    --card: 0 0% 100%;
-    --card-foreground: 222 25% 15%;
+    --card: 232 24% 20%;
+    --card-foreground: 220 9% 87%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 25% 15%;
+    --popover: 232 24% 20%;
+    --popover-foreground: 220 9% 87%;
 
-    /* Primary blue - modern professional */
-    --primary: 217 91% 60%;
+    --primary: 142 76% 36%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 217 91% 55%;
 
-    /* Secondary - light blue accent */
-    --secondary: 214 88% 86%;
-    --secondary-foreground: 217 91% 35%;
+    --secondary: 233 23% 25%;
+    --secondary-foreground: 220 9% 87%;
 
-    /* Muted backgrounds */
-    --muted: 216 50% 96%;
-    --muted-foreground: 215 25% 45%;
+    --muted: 233 23% 25%;
+    --muted-foreground: 220 9% 65%;
 
-    /* Accent - vibrant cyan */
-    --accent: 191 95% 77%;
-    --accent-foreground: 217 91% 35%;
+    --accent: 142 76% 36%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Success green */
-    --success: 142 76% 36%;
-    --success-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 220 9% 87%;
 
-    /* Warning orange */
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    /* Subtle borders */
-    --border: 217 91% 90%;
-    --input: 217 91% 88%;
-    --ring: 217 91% 60%;
-
-    /* Gradient variables */
-    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(191 95% 77%));
-    --gradient-secondary: linear-gradient(180deg, hsl(216 50% 98%), hsl(214 88% 94%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(217 91% 98%));
-
-    /* Modern shadows */
-    --shadow-soft: 0 2px 20px -2px hsl(217 91% 60% / 0.15);
-    --shadow-medium: 0 8px 30px -4px hsl(217 91% 60% / 0.25);
-    --shadow-strong: 0 20px 60px -8px hsl(217 91% 60% / 0.4);
+    --border: 233 20% 28%;
+    --input: 233 20% 28%;
+    --ring: 142 76% 36%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 230 25% 15%;
+    --foreground: 220 9% 87%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 232 24% 20%;
+    --card-foreground: 220 9% 87%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 232 24% 20%;
+    --popover-foreground: 220 9% 87%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 142 76% 36%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 233 23% 25%;
+    --secondary-foreground: 220 9% 87%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 233 23% 25%;
+    --muted-foreground: 220 9% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 142 76% 36%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 220 9% 87%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 233 20% 28%;
+    --input: 233 20% 28%;
+    --ring: 142 76% 36%;
+
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -127,5 +91,28 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  html {
+    @apply dark;
+  }
+}
+
+@layer components {
+  /* Status badge styles for dark theme */
+  .status-overdue {
+    @apply bg-red-500/20 text-red-300 border border-red-500/30;
+  }
+
+  .status-due {
+    @apply bg-amber-500/20 text-amber-300 border border-amber-500/30;
+  }
+
+  .status-upcoming {
+    @apply bg-gray-500/20 text-gray-300 border border-gray-500/30;
+  }
+
+  .status-success {
+    @apply bg-green-500/20 text-green-300 border border-green-500/30;
   }
 }

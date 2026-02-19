@@ -1,555 +1,541 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash2, Save, Calculator, CalendarIcon } from 'lucide-react';
-import { format } from 'date-fns';
-import { EstimateEntry, PERIL_OPTIONS } from '../../types/kpi';
-import { toast } from '@/hooks/use-toast';
-
+import { Trash2, Plus, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
+import { useEstimatorContext } from '@/contexts/EstimatorContext';
+import { PERIL_OPTIONS } from '@/types/kpi';
+import { SELECTABLE_STATUSES, STATUS_LABELS, STATUS_COLORS, ALLOWED_TRANSITIONS, canTransition, type EstimateStatus } from '@/lib/status';
+import type { Estimate } from '@/types/estimate';
+import BlockerDialog from './BlockerDialog';
+import UnblockDialog from './UnblockDialog';
+import type { BlockerType } from '@/lib/status';
 
 interface DataEntryTabProps {
-  estimator: string;
+  estimatorId: string;
   estimatorName: string;
-  data: EstimateEntry[];
-  onDataUpdate: (data: EstimateEntry[]) => void;
-  weekRange: string;
 }
 
-const DataEntryTab: React.FC<DataEntryTabProps> = ({
-  estimator,
-  estimatorName,
-  data,
-  onDataUpdate,
-  weekRange
-}) => {
+const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName }) => {
+  const { estimates, carriers, addEstimate, editEstimate, removeEstimate, blockEstimate, unblockEstimate, updateStatus, saveCarrier } = useEstimatorContext();
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [validationErrors, setValidationErrors] = useState<Set<string>>(new Set());
-  const [focusedEstimateInput, setFocusedEstimateInput] = useState<string | null>(null);
-  const [inputValues, setInputValues] = useState<{[key: string]: string}>({});
+  const [editingValues, setEditingValues] = useState<Record<string, string>>({});
 
-  // Helper function to get today's date in local timezone
-  const getTodayLocalDate = (): string => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const day = today.getDate().toString().padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  // Blocker dialog state
+  const [blockerTarget, setBlockerTarget] = useState<Estimate | null>(null);
+  const [unblockerTarget, setUnblockerTarget] = useState<Estimate | null>(null);
+
+  // Filter estimates for this estimator
+  const myEstimates = estimates.filter((e) => e.estimator_id === estimatorId);
+
+  // ── Helpers ────────────────────────────────────────────────
+
+  const getTodayISO = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  // Initialize with one empty row if no data, also normalize existing data
-  if (data.length === 0) {
-    onDataUpdate([createEmptyEntry()]);
-  } else {
-    // Normalize existing data to ensure all string fields are actually strings
-    const normalizedData = data.map(entry => ({
-      ...entry,
-      fileNumber: entry.fileNumber || '',
-      clientName: entry.clientName || '',
-      notes: entry.notes || ''
-    }));
-    
-    // Update data if it was normalized
-    if (JSON.stringify(normalizedData) !== JSON.stringify(data)) {
-      onDataUpdate(normalizedData);
-    }
-  }
-
-  function createEmptyEntry(): EstimateEntry {
-    return {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      date: getTodayLocalDate(),
-      fileNumber: '',
-      clientName: '',
-      peril: null, // Changed: No longer auto-populates to "Wind"
-      severity: null,
-      timeHours: null,
-      revisionTimeHours: null,
-      estimateValue: null,
-      revisions: null,
-      status: null,
-      notes: '',
-      actualSettlement: null,
-      settlementDate: null,
-      isSettled: false
-    };
-  }
-
-  const validateEntry = (entry: EstimateEntry): string[] => {
-    const errors: string[] = [];
-    
-    // Ensure strings are properly handled
-    if (!entry.fileNumber || entry.fileNumber.trim() === '') errors.push('File Number');
-    if (!entry.clientName || entry.clientName.trim() === '') errors.push('Client Name');
-    if (!entry.peril || entry.peril.trim() === '') errors.push('Peril');
-    if (!entry.severity) errors.push('Severity');
-    // Hours validation removed - allow any value including decimals
-    if (!entry.estimateValue || entry.estimateValue <= 0) errors.push('Estimated Value');
-    if (!entry.status) errors.push('Status');
-    
-    return errors;
-  };
-
-  // Check if a field has validation error
-  const hasFieldError = (entry: EstimateEntry, field: string): boolean => {
-    if (!validationErrors.has(entry.id)) return false;
-    
-    switch (field) {
-      // Removed date case since it's no longer validated
-      case 'fileNumber': return !entry.fileNumber || entry.fileNumber.trim() === '';
-      case 'clientName': return !entry.clientName || entry.clientName.trim() === '';
-      case 'peril': return !entry.peril || entry.peril.trim() === '';
-      case 'severity': return !entry.severity;
-      case 'timeHours': return false; // No validation for hours field
-      case 'estimateValue': return !entry.estimateValue || entry.estimateValue <= 0;
-      case 'status': return !entry.status;
-      default: return false;
-    }
-  };
-
-  const hasIncompleteRows = (): boolean => {
-    return data.some(entry => validateEntry(entry).length > 0);
-  };
-
-  const saveEntry = () => {
-    // Check if there are any incomplete rows
-    const incompleteRows = data.map((entry, index) => ({ 
-      entry, 
-      index, 
-      errors: validateEntry(entry) 
-    })).filter(row => row.errors.length > 0);
-
-    if (incompleteRows.length > 0) {
-      const errorMessages = incompleteRows.map(row => 
-        `Row ${row.index + 1}: Missing ${row.errors.join(', ')}`
-      ).join('\n');
-      
-      toast({
-        title: "Cannot add new entry",
-        description: `Please complete all required fields:\n${errorMessages}`,
-        variant: "destructive"
-      });
-      
-      // Update validation errors for visual feedback
-      const errorIds = incompleteRows.map(row => row.entry.id);
-      setValidationErrors(new Set(errorIds));
-      return;
-    }
-
-    // Clear validation errors
-    setValidationErrors(new Set());
-    
-    // Add new row only if all existing rows are complete
-    const newData = [...data, createEmptyEntry()];
-    onDataUpdate(newData);
-    
-    toast({
-      title: "Entry saved",
-      description: "New row added. You can now enter the next estimate."
-    });
-  };
-
-  const deleteSelectedRows = () => {
-    if (selectedRows.size === 0) {
-      toast({
-        title: "No rows selected",
-        description: "Please select at least one row to delete.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (selectedRows.size === data.length) {
-      toast({
-        title: "Cannot delete all rows",
-        description: "You must keep at least one row in the table.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newData = data.filter(entry => !selectedRows.has(entry.id));
-    onDataUpdate(newData);
-    setSelectedRows(new Set());
-    
-    toast({
-      title: "Rows deleted",
-      description: `${selectedRows.size} row(s) have been deleted.`
-    });
-  };
-
-  const updateEntry = (index: number, field: keyof EstimateEntry, value: any) => {
-    const newData = [...data];
-    
-    // Ensure data integrity - normalize string fields
-    if (field === 'fileNumber' || field === 'clientName' || field === 'notes') {
-      value = value || '';
-    }
-    
-    // Handle date field - format as YYYY-MM-DD without timezone conversion
-    if (field === 'date' && value instanceof Date) {
-      // Use toLocaleDateString to avoid timezone issues
-      const localDate = new Date(value.getTime() - (value.getTimezoneOffset() * 60000));
-      value = localDate.toISOString().split('T')[0];
-    }
-    
-    newData[index] = { ...newData[index], [field]: value };
-    onDataUpdate(newData);
-    
-    // Clear validation error for this entry if it becomes valid
-    const entryId = newData[index].id;
-    if (validationErrors.has(entryId)) {
-      const errors = validateEntry(newData[index]);
-      if (errors.length === 0) {
-        const newErrors = new Set(validationErrors);
-        newErrors.delete(entryId);
-        setValidationErrors(newErrors);
-      }
-    }
-  };
-
-  const toggleRowSelection = (id: string) => {
-    const newSelected = new Set(selectedRows);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedRows(newSelected);
-  };
-
-  // Helper function to format currency values
   const formatCurrency = (value: number | null): string => {
     if (value === null || value === undefined) return '';
-    return new Intl.NumberFormat('en-US', {
-      style: 'decimal',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(value);
+    return new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
   };
 
-  const calculateMetrics = () => {
-    toast({
-      title: "Metrics calculated",
-      description: "Weekly metrics have been calculated! View results in the Estimator Scorecards and Team Dashboard tabs."
+  const getEditValue = (id: string, field: string, fallback: string) => {
+    const key = `${id}_${field}`;
+    return key in editingValues ? editingValues[key] : fallback;
+  };
+
+  const setEditValue = (id: string, field: string, value: string) => {
+    setEditingValues((prev) => ({ ...prev, [`${id}_${field}`]: value }));
+  };
+
+  const clearEditValue = (id: string, field: string) => {
+    setEditingValues((prev) => {
+      const next = { ...prev };
+      delete next[`${id}_${field}`];
+      return next;
     });
   };
 
+  // ── Row color logic ────────────────────────────────────────
+
+  const getRowClass = (est: Estimate): string => {
+    if (est.status === 'blocked' && est.current_blocked_at) {
+      const hours = (Date.now() - new Date(est.current_blocked_at).getTime()) / 3600000;
+      if (hours > 48) return 'border-l-4 border-l-red-500 bg-red-500/5';
+      return 'border-l-4 border-l-amber-500 bg-amber-500/5';
+    }
+    if (est.sla_breached) return 'bg-red-500/5';
+    return '';
+  };
+
+  const getBlockedBadge = (est: Estimate): string | null => {
+    if (est.status !== 'blocked' || !est.current_blocked_at) return null;
+    const hours = (Date.now() - new Date(est.current_blocked_at).getTime()) / 3600000;
+    const days = Math.floor(hours / 24);
+    if (days > 0) return `BLOCKED ${days}d`;
+    return `BLOCKED ${Math.floor(hours)}h`;
+  };
+
+  // ── CRUD ───────────────────────────────────────────────────
+
+  const handleAddRow = async () => {
+    try {
+      await addEstimate({
+        file_number: '',
+        client_name: '',
+        estimator_id: estimatorId,
+        estimator_name: estimatorName,
+        status: 'assigned',
+        date_received: new Date().toISOString(),
+        peril: null,
+        severity: null,
+        estimate_value: null,
+        carrier: '',
+        notes: '',
+        revisions: 0,
+        is_settled: false,
+        actual_settlement: null,
+        settlement_date: null,
+        claim_number: '',
+        policy_number: '',
+        loss_state: '',
+        loss_date: null,
+        carrier_adjuster: '',
+        carrier_adjuster_email: '',
+        carrier_adjuster_phone: '',
+        contractor_company: '',
+        contractor_rep: '',
+        contractor_rep_email: '',
+        contractor_rep_phone: '',
+        public_adjuster: '',
+        rcv: null,
+        acv: null,
+        depreciation: null,
+        deductible: null,
+        net_claim: null,
+        overhead_and_profit: null,
+        property_type: null,
+        sla_target_hours: null,
+      });
+      toast({ title: 'New row added' });
+    } catch (err: any) {
+      toast({ title: 'Error adding row', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleFieldBlur = async (est: Estimate, field: keyof Estimate, rawValue: string) => {
+    const key = `${est.id}_${field}`;
+    clearEditValue(est.id, field);
+
+    let value: any = rawValue;
+
+    // Parse numbers
+    if (['estimate_value', 'active_time_minutes', 'revision_time_minutes', 'revisions'].includes(field)) {
+      const clean = rawValue.replace(/,/g, '');
+      value = clean === '' ? null : parseFloat(clean);
+      if (value !== null && isNaN(value)) return;
+
+      // Convert hours input to minutes for time fields
+      if (field === 'active_time_minutes' && value !== null) {
+        value = Math.round(value * 60);
+      }
+      if (field === 'revision_time_minutes' && value !== null) {
+        value = Math.round(value * 60);
+      }
+    }
+
+    // Skip if unchanged
+    if (est[field] === value) return;
+    if (est[field] === null && (value === '' || value === null)) return;
+
+    try {
+      const updates: Partial<Estimate> = { [field]: value || null };
+
+      // If carrier changed and non-empty, ensure it exists in reference table
+      if (field === 'carrier' && value && typeof value === 'string' && value.trim()) {
+        await saveCarrier(value.trim());
+      }
+
+      // Update total_time_minutes when active or blocked time changes
+      if (field === 'active_time_minutes') {
+        updates.total_time_minutes = (value || 0) + (est.blocked_time_minutes || 0);
+      }
+
+      await editEstimate(est.id, updates);
+    } catch (err: any) {
+      toast({ title: 'Error saving', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleSelectChange = async (est: Estimate, field: keyof Estimate, value: string) => {
+    const parsed = field === 'severity' ? (value ? parseInt(value) : null) : (value === '__none__' ? null : value);
+
+    try {
+      // If changing status, use the status change function for proper event logging
+      if (field === 'status' && parsed && typeof parsed === 'string') {
+        const newStatus = parsed as EstimateStatus;
+        if (!canTransition(est.status, newStatus)) {
+          toast({
+            title: 'Invalid transition',
+            description: `Cannot go from "${STATUS_LABELS[est.status]}" to "${STATUS_LABELS[newStatus]}"`,
+            variant: 'destructive',
+          });
+          return;
+        }
+        await updateStatus(est.id, est.status, newStatus);
+      } else {
+        await editEstimate(est.id, { [field]: parsed } as any);
+      }
+    } catch (err: any) {
+      toast({ title: 'Error saving', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedRows.size === 0) return;
+    try {
+      for (const id of selectedRows) {
+        await removeEstimate(id);
+      }
+      setSelectedRows(new Set());
+      toast({ title: `Deleted ${selectedRows.size} row(s)` });
+    } catch (err: any) {
+      toast({ title: 'Error deleting', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  // ── Blocker handlers ───────────────────────────────────────
+
+  const handleBlockConfirm = async (blockerType: BlockerType, blockerName: string, blockerReason: string) => {
+    if (!blockerTarget) return;
+    try {
+      await blockEstimate(blockerTarget.id, blockerType, blockerName, blockerReason);
+      toast({ title: 'File marked as blocked' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setBlockerTarget(null);
+  };
+
+  const handleUnblockConfirm = async (resolutionNote: string) => {
+    if (!unblockerTarget) return;
+    try {
+      await unblockEstimate(unblockerTarget.id, resolutionNote);
+      toast({ title: 'Blocker resolved' });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setUnblockerTarget(null);
+  };
+
+  // ── Toggle row selection ───────────────────────────────────
+
+  const toggleRow = (id: string) => {
+    setSelectedRows((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  // ── Available statuses for dropdown (based on current status) ─
+
+  const getAvailableStatuses = (current: EstimateStatus): EstimateStatus[] => {
+    return ALLOWED_TRANSITIONS[current] || [];
+  };
+
+  // ── Render ─────────────────────────────────────────────────
+
   return (
-    <Card>
+    <>
+      <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span>{estimatorName} - Current Week</span>
+            <span>{estimatorName} — Active Estimates</span>
             <span className="text-sm font-normal text-muted-foreground">
-              Entries: {data.length}
+              {myEstimates.length} file{myEstimates.length !== 1 ? 's' : ''}
             </span>
           </CardTitle>
-          <CardDescription>
-            Week of {weekRange}
-          </CardDescription>
         </CardHeader>
         <CardContent>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse border border-border">
-            <thead>
-              <tr className="bg-primary text-primary-foreground">
-                <th className="border border-border p-2 w-10">✓</th>
-                <th className="border border-border p-2 w-24">Date</th>
-                <th className="border border-border p-2 w-32">File Number</th>
-                <th className="border border-border p-2 w-40">Client Name</th>
-                <th className="border border-border p-2 w-28">Peril</th>
-                <th className="border border-border p-2 w-20">Severity</th>
-                  <th className="border border-border p-2 w-24">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>Hours</TooltipTrigger>
-                      <TooltipContent>
-                        <p>Enter hours (e.g., 0.25 = 15min, 0.5 = 30min, 1.0 = 60min)</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </th>
-                <th className="border border-border p-2 w-24">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>Rev Time</TooltipTrigger>
-                      <TooltipContent>
-                        <p>Enter revision hours (e.g., 0.25 = 15min, 0.5 = 30min)</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </th>
-                <th className="border border-border p-2 w-28">Est. Value</th>
-                <th className="border border-border p-2 w-20">Revisions</th>
-                <th className="border border-border p-2 w-28">Status</th>
-                <th className="border border-border p-2 w-36">Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((entry, index) => {
-                const hasErrors = validationErrors.has(entry.id);
-                const errors = validateEntry(entry);
-                return (
-                <tr key={entry.id} className={cn("hover:bg-accent/50", hasErrors && "bg-red-50 dark:bg-red-950/20")}>
-                  <td className="border border-border p-2 text-center">
-                    <Checkbox
-                      checked={selectedRows.has(entry.id)}
-                      onCheckedChange={() => toggleRowSelection(entry.id)}
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "border-0 h-8 w-full justify-start text-left font-normal",
-                            !entry.date && "text-muted-foreground"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {entry.date ? format(new Date(entry.date), "MM/dd/yyyy") : <span>Pick a date</span>}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={entry.date ? new Date(entry.date) : undefined}
-                          onSelect={(date) => updateEntry(index, 'date', date)}
-                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
-                          initialFocus
-                          className="p-3 pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </td>
-                  <td className="border border-border p-1">
-                    <Input
-                      value={entry.fileNumber}
-                      onChange={(e) => updateEntry(index, 'fileNumber', e.target.value)}
-                      className={cn("border-0 h-8", hasFieldError(entry, 'fileNumber') && "ring-2 ring-red-500")}
-                      placeholder="File #"
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Input
-                      value={entry.clientName}
-                      onChange={(e) => updateEntry(index, 'clientName', e.target.value)}
-                      className={cn("border-0 h-8", hasFieldError(entry, 'clientName') && "ring-2 ring-red-500")}
-                      placeholder="Client name"
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Select
-                      value={entry.peril || ''}
-                      onValueChange={(value) => updateEntry(index, 'peril', value === 'none' ? null : value)}
-                    >
-                      <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'peril') && "ring-2 ring-red-500")}>
-                        <SelectValue placeholder="Select peril" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Select Peril...</SelectItem>
-                        {PERIL_OPTIONS.map((peril) => (
-                          <SelectItem key={peril} value={peril}>
-                            {peril}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="border border-border p-1">
-                    <Select
-                      value={entry.severity?.toString() || ''}
-                      onValueChange={(value) => updateEntry(index, 'severity', value ? parseInt(value) : null)}
-                    >
-                      <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'severity') && "ring-2 ring-red-500")}>
-                        <SelectValue placeholder="" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1">1</SelectItem>
-                        <SelectItem value="2">2</SelectItem>
-                        <SelectItem value="3">3</SelectItem>
-                        <SelectItem value="4">4</SelectItem>
-                        <SelectItem value="5">5</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="border border-border p-1">
-                    <Input
-                      type="text"
-                      value={inputValues[`${entry.id}_hours`] ?? (entry.timeHours?.toString() || '')}
-                      onChange={(e) => {
-                        const inputKey = `${entry.id}_hours`;
-                        setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
-                      }}
-                      onBlur={(e) => {
-                        const inputKey = `${entry.id}_hours`;
-                        const rawValue = e.target.value.trim();
-                        
-                        if (rawValue === '') {
-                          updateEntry(index, 'timeHours', null);
-                        } else {
-                          const numValue = parseFloat(rawValue);
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            updateEntry(index, 'timeHours', numValue);
-                          }
-                        }
-                        
-                        // Clear input state after processing
-                        setTimeout(() => {
-                          setInputValues(prev => {
-                            const newValues = {...prev};
-                            delete newValues[inputKey];
-                            return newValues;
-                          });
-                        }, 0);
-                      }}
-                      className={cn("border-0 h-8 text-right", hasFieldError(entry, 'timeHours') && "ring-2 ring-red-500")}
-                      placeholder="0.25"
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Input
-                      type="text"
-                      value={inputValues[`${entry.id}_revtime`] ?? (entry.revisionTimeHours?.toString() || '')}
-                      onChange={(e) => {
-                        const inputKey = `${entry.id}_revtime`;
-                        setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
-                      }}
-                      onBlur={(e) => {
-                        const inputKey = `${entry.id}_revtime`;
-                        const rawValue = e.target.value.trim();
-                        
-                        if (rawValue === '') {
-                          updateEntry(index, 'revisionTimeHours', null);
-                        } else {
-                          const numValue = parseFloat(rawValue);
-                          if (!isNaN(numValue) && numValue >= 0) {
-                            updateEntry(index, 'revisionTimeHours', numValue);
-                          }
-                        }
-                        
-                        // Clear input state after processing
-                        setTimeout(() => {
-                          setInputValues(prev => {
-                            const newValues = {...prev};
-                            delete newValues[inputKey];
-                            return newValues;
-                          });
-                        }, 0);
-                      }}
-                      className="border-0 h-8 text-right"
-                      placeholder="0.5"
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Input
-                      type="text"
-                      value={
-                        focusedEstimateInput === entry.id 
-                          ? (inputValues[`${entry.id}_estimate`] ?? entry.estimateValue?.toString() ?? '') 
-                          : (entry.estimateValue ? formatCurrency(entry.estimateValue) : '')
-                      }
-                      onFocus={() => setFocusedEstimateInput(entry.id)}
-                      onBlur={(e) => {
-                        setFocusedEstimateInput(null);
-                        const cleanValue = e.target.value.replace(/,/g, '');
-                        updateEntry(index, 'estimateValue', cleanValue ? parseFloat(cleanValue) : null);
-                      }}
-                       onChange={(e) => {
-                         // Store raw input value during typing
-                         const inputKey = `${entry.id}_estimate`;
-                         setInputValues(prev => ({...prev, [inputKey]: e.target.value}));
-                       }}
-                      className={cn("border-0 h-8 text-right", hasFieldError(entry, 'estimateValue') && "ring-2 ring-red-500")}
-                      placeholder="0.00"
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Input
-                      type="text"
-                      value={entry.revisions ?? ''}
-                      onChange={(e) => updateEntry(index, 'revisions', e.target.value ? parseInt(e.target.value) : null)}
-                      className="border-0 h-8 text-right"
-                      placeholder="0"
-                    />
-                  </td>
-                  <td className="border border-border p-1">
-                    <Select
-                      value={entry.status || ''}
-                      onValueChange={(value) => updateEntry(index, 'status', value || null)}
-                    >
-                      <SelectTrigger className={cn("border-0 h-8", hasFieldError(entry, 'status') && "ring-2 ring-red-500")}>
-                        <SelectValue placeholder="" />
-                      </SelectTrigger>
-                       <SelectContent>
-                         <SelectItem value="incomplete">Incomplete</SelectItem>
-                         <SelectItem value="sent">Sent to the PA</SelectItem>
-                         <SelectItem value="sent-to-carrier">Sent to Carrier</SelectItem>
-                         <SelectItem value="unable-to-start">Unable to start</SelectItem>
-                         <SelectItem value="pending">Pending</SelectItem>
-                       </SelectContent>
-                    </Select>
-                  </td>
-                  <td className="border border-border p-1">
-                    {entry.notes === 'Custom...' || (!['Calls to PA', 'Emails', 'File review'].includes(entry.notes) && entry.notes) ? (
-                      <Input
-                        value={entry.notes === 'Custom...' ? '' : entry.notes}
-                        onChange={(e) => updateEntry(index, 'notes', e.target.value)}
-                        className="border-0 h-8"
-                        placeholder="Type custom note..."
-                        autoFocus
-                      />
-                    ) : (
-                      <Select
-                        value={entry.notes || ''}
-                        onValueChange={(value) => updateEntry(index, 'notes', value)}
-                      >
-                        <SelectTrigger className="border-0 h-8">
-                          <SelectValue placeholder="Select note type..." />
-                        </SelectTrigger>
-                        <SelectContent className="bg-background border border-border shadow-lg z-50">
-                          <SelectItem value="Calls to PA">Calls to PA</SelectItem>
-                          <SelectItem value="Emails">Emails</SelectItem>
-                          <SelectItem value="File review">File review</SelectItem>
-                          <SelectItem value="Custom...">Custom...</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse border border-border text-sm">
+              <thead>
+                <tr className="bg-primary text-primary-foreground">
+                  <th className="border border-border p-2 w-8"></th>
+                  <th className="border border-border p-2">File #</th>
+                  <th className="border border-border p-2">Client</th>
+                  <th className="border border-border p-2">Carrier</th>
+                  <th className="border border-border p-2 w-28">Peril</th>
+                  <th className="border border-border p-2 w-16">Sev</th>
+                  <th className="border border-border p-2 w-20">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>Hours</TooltipTrigger>
+                        <TooltipContent>
+                          <p>Active work hours (0.25 = 15min)</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </th>
+                  <th className="border border-border p-2 w-24">Est. Value</th>
+                  <th className="border border-border p-2 w-16">Rev</th>
+                  <th className="border border-border p-2 w-36">Status</th>
+                  <th className="border border-border p-2 w-28">Blocker</th>
+                  <th className="border border-border p-2">Notes</th>
                 </tr>
-              )})}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {myEstimates.map((est) => {
+                  const blockedBadge = getBlockedBadge(est);
+                  return (
+                    <tr key={est.id} className={cn('hover:bg-accent/20', getRowClass(est))}>
+                      {/* Checkbox */}
+                      <td className="border border-border p-1 text-center">
+                        <Checkbox
+                          checked={selectedRows.has(est.id)}
+                          onCheckedChange={() => toggleRow(est.id)}
+                        />
+                      </td>
 
-        <div className="flex gap-2 mt-4">
-          <Button onClick={saveEntry} variant="outline" size="sm">
-            <Save className="h-4 w-4 mr-2" />
-            Save Entry
-          </Button>
-          <Button 
-            onClick={deleteSelectedRows} 
-            variant="outline" 
-            size="sm"
-            disabled={selectedRows.size === 0}
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Selected
-          </Button>
-          <Button onClick={calculateMetrics} size="sm">
-            <Calculator className="h-4 w-4 mr-2" />
-            Calculate This Week
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+                      {/* File Number */}
+                      <td className="border border-border p-1">
+                        <Input
+                          value={getEditValue(est.id, 'file_number', est.file_number)}
+                          onChange={(e) => setEditValue(est.id, 'file_number', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'file_number', e.target.value)}
+                          className="border-0 h-8"
+                          placeholder="File #"
+                        />
+                      </td>
+
+                      {/* Client Name */}
+                      <td className="border border-border p-1">
+                        <Input
+                          value={getEditValue(est.id, 'client_name', est.client_name)}
+                          onChange={(e) => setEditValue(est.id, 'client_name', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'client_name', e.target.value)}
+                          className="border-0 h-8"
+                          placeholder="Client name"
+                        />
+                      </td>
+
+                      {/* Carrier (optional, auto-suggest from reference data) */}
+                      <td className="border border-border p-1">
+                        <Input
+                          value={getEditValue(est.id, 'carrier', est.carrier)}
+                          onChange={(e) => setEditValue(est.id, 'carrier', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'carrier', e.target.value)}
+                          className="border-0 h-8"
+                          placeholder="Carrier"
+                          list={`carriers-${est.id}`}
+                        />
+                        <datalist id={`carriers-${est.id}`}>
+                          {carriers.map((c) => (
+                            <option key={c} value={c} />
+                          ))}
+                        </datalist>
+                      </td>
+
+                      {/* Peril */}
+                      <td className="border border-border p-1">
+                        <Select
+                          value={est.peril || '__none__'}
+                          onValueChange={(v) => handleSelectChange(est, 'peril', v)}
+                        >
+                          <SelectTrigger className="border-0 h-8">
+                            <SelectValue placeholder="Peril" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">--</SelectItem>
+                            {PERIL_OPTIONS.map((p) => (
+                              <SelectItem key={p} value={p}>{p}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+
+                      {/* Severity */}
+                      <td className="border border-border p-1">
+                        <Select
+                          value={est.severity?.toString() || ''}
+                          onValueChange={(v) => handleSelectChange(est, 'severity', v)}
+                        >
+                          <SelectTrigger className="border-0 h-8">
+                            <SelectValue placeholder="" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <SelectItem key={s} value={s.toString()}>{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+
+                      {/* Hours (input as decimal hours → stored as active_time_minutes) */}
+                      <td className="border border-border p-1">
+                        <Input
+                          type="text"
+                          value={getEditValue(est.id, 'hours', est.active_time_minutes > 0 ? (est.active_time_minutes / 60).toString() : '')}
+                          onChange={(e) => setEditValue(est.id, 'hours', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'active_time_minutes', e.target.value)}
+                          className="border-0 h-8 text-right"
+                          placeholder="0.25"
+                        />
+                      </td>
+
+                      {/* Estimate Value */}
+                      <td className="border border-border p-1">
+                        <Input
+                          type="text"
+                          value={
+                            `${est.id}_estimate_value` in editingValues
+                              ? editingValues[`${est.id}_estimate_value`]
+                              : (est.estimate_value ? formatCurrency(est.estimate_value) : '')
+                          }
+                          onFocus={() => setEditValue(est.id, 'estimate_value', est.estimate_value?.toString() ?? '')}
+                          onChange={(e) => setEditValue(est.id, 'estimate_value', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'estimate_value', e.target.value)}
+                          className="border-0 h-8 text-right"
+                          placeholder="0.00"
+                        />
+                      </td>
+
+                      {/* Revisions */}
+                      <td className="border border-border p-1">
+                        <Input
+                          type="text"
+                          value={getEditValue(est.id, 'revisions', est.revisions?.toString() ?? '')}
+                          onChange={(e) => setEditValue(est.id, 'revisions', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'revisions', e.target.value)}
+                          className="border-0 h-8 text-right w-14"
+                          placeholder="0"
+                        />
+                      </td>
+
+                      {/* Status dropdown */}
+                      <td className="border border-border p-1">
+                        <div className="flex items-center gap-1">
+                          <span className={cn('text-xs px-1.5 py-0.5 rounded border', STATUS_COLORS[est.status])}>
+                            {STATUS_LABELS[est.status]}
+                          </span>
+                          {est.status !== 'closed' && est.status !== 'blocked' && (
+                            <Select
+                              value=""
+                              onValueChange={(v) => handleSelectChange(est, 'status', v)}
+                            >
+                              <SelectTrigger className="border-0 h-6 w-8 p-0">
+                                <span className="text-muted-foreground text-xs">...</span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {getAvailableStatuses(est.status).filter(s => s !== 'blocked').map((s) => (
+                                  <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
+                        {blockedBadge && (
+                          <span className="text-[10px] font-bold text-amber-400 mt-0.5 block">
+                            {blockedBadge}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Blocker button */}
+                      <td className="border border-border p-1 text-center">
+                        {est.status === 'in-progress' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs bg-amber-600/20 text-amber-300 border-amber-500/40 hover:bg-amber-600/40"
+                            onClick={() => setBlockerTarget(est)}
+                          >
+                            <ShieldAlert className="h-3 w-3 mr-1" />
+                            Blocked
+                          </Button>
+                        )}
+                        {est.status === 'blocked' && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs bg-green-600/20 text-green-300 border-green-500/40 hover:bg-green-600/40"
+                            onClick={() => setUnblockerTarget(est)}
+                          >
+                            <ShieldCheck className="h-3 w-3 mr-1" />
+                            Unblocked
+                          </Button>
+                        )}
+                      </td>
+
+                      {/* Notes */}
+                      <td className="border border-border p-1">
+                        <Input
+                          value={getEditValue(est.id, 'notes', est.notes)}
+                          onChange={(e) => setEditValue(est.id, 'notes', e.target.value)}
+                          onBlur={(e) => handleFieldBlur(est, 'notes', e.target.value)}
+                          className="border-0 h-8"
+                          placeholder="Notes..."
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+
+                {myEstimates.length === 0 && (
+                  <tr>
+                    <td colSpan={12} className="border border-border p-8 text-center text-muted-foreground">
+                      No estimates yet. Click "Add Row" to enter your first estimate.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex gap-2 mt-4">
+            <Button onClick={handleAddRow} variant="outline" size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Row
+            </Button>
+            <Button
+              onClick={handleDeleteSelected}
+              variant="outline"
+              size="sm"
+              disabled={selectedRows.size === 0}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Selected
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Blocker Dialog */}
+      <BlockerDialog
+        open={!!blockerTarget}
+        onClose={() => setBlockerTarget(null)}
+        onConfirm={handleBlockConfirm}
+        fileNumber={blockerTarget?.file_number || ''}
+      />
+
+      {/* Unblock Dialog */}
+      <UnblockDialog
+        open={!!unblockerTarget}
+        onClose={() => setUnblockerTarget(null)}
+        onConfirm={handleUnblockConfirm}
+        fileNumber={unblockerTarget?.file_number || ''}
+        blockerType={unblockerTarget?.current_blocker_type || ''}
+        blockerReason={unblockerTarget?.current_blocker_reason || ''}
+        blockedAt={unblockerTarget?.current_blocked_at || null}
+      />
+    </>
   );
 };
 
