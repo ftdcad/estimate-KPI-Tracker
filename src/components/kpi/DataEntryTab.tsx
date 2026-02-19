@@ -267,18 +267,18 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="min-w-[1400px] w-full border-collapse border border-border text-sm">
+            <table className="w-full table-fixed border-collapse border border-border text-sm">
               <thead>
                 <tr className="bg-primary text-primary-foreground">
                   <th className="border border-border p-2 w-8"></th>
-                  <th className="border border-border p-2 w-28">File #</th>
-                  <th className="border border-border p-2 w-36">Client</th>
-                  <th className="border border-border p-2 w-36">Ref. Source</th>
-                  <th className="border border-border p-2 w-36">Ref. Source Rep</th>
-                  <th className="border border-border p-2 w-32">Carrier</th>
-                  <th className="border border-border p-2 w-28">Peril</th>
-                  <th className="border border-border p-2 w-16">Sev</th>
-                  <th className="border border-border p-2 w-20">
+                  <th className="border border-border p-2 w-[100px]">File #</th>
+                  <th className="border border-border p-2">Client</th>
+                  <th className="border border-border p-2">Ref. Source</th>
+                  <th className="border border-border p-2">Ref. Source Rep</th>
+                  <th className="border border-border p-2 w-[120px]">Carrier</th>
+                  <th className="border border-border p-2 w-[100px]">Peril</th>
+                  <th className="border border-border p-2 w-[60px]">Sev</th>
+                  <th className="border border-border p-2 w-[70px]">
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger>Hours</TooltipTrigger>
@@ -288,10 +288,10 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
                       </Tooltip>
                     </TooltipProvider>
                   </th>
-                  <th className="border border-border p-2 w-24">Est. Value</th>
-                  <th className="border border-border p-2 w-16">Rev</th>
-                  <th className="border border-border p-2 w-36">Status</th>
-                  <th className="border border-border p-2 w-28">Blocker</th>
+                  <th className="border border-border p-2 w-[100px]">Est. Value</th>
+                  <th className="border border-border p-2 w-[60px]">Rev</th>
+                  <th className="border border-border p-2 w-[120px]">Status</th>
+                  <th className="border border-border p-2 w-[100px]">Blocker</th>
                   <th className="border border-border p-2">Notes</th>
                 </tr>
               </thead>
