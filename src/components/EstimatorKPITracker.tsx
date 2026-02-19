@@ -5,6 +5,7 @@ import { useCurrentUser } from '@/contexts/UserContext';
 import { canViewAllUsers } from '@/lib/auth';
 import { useKPIData } from '@/hooks/useKPIData';
 import DataEntryTab from './kpi/DataEntryTab';
+import { PersonalStatsCard } from './kpi/PersonalStatsCard';
 import EstimatorScorecard from './kpi/EstimatorScorecard';
 import TeamDashboard from './kpi/TeamDashboard';
 import AnalysisTab from './kpi/AnalysisTab';
@@ -84,14 +85,23 @@ function EstimatorPageContent() {
           </TabsList>
 
           {/* Estimator data entry tabs */}
-          {estimatorTabs.map((profile) => (
-            <TabsContent key={`${profile.user_id}-entry`} value={`${profile.user_id}-entry`}>
-              <DataEntryTab
-                estimatorId={profile.user_id}
-                estimatorName={profile.display_name}
-              />
-            </TabsContent>
-          ))}
+          {estimatorTabs.map((profile) => {
+            const kpiKey = profile.display_name.toLowerCase().replace(/\s+/g, '');
+            return (
+              <TabsContent key={`${profile.user_id}-entry`} value={`${profile.user_id}-entry`}>
+                <div className="mb-6">
+                  <PersonalStatsCard
+                    data={kpiData.estimators[kpiKey] || []}
+                    estimatorName={profile.display_name}
+                  />
+                </div>
+                <DataEntryTab
+                  estimatorId={profile.user_id}
+                  estimatorName={profile.display_name}
+                />
+              </TabsContent>
+            );
+          })}
 
           {/* Legacy tabs using compatibility hook */}
           <TabsContent value="scorecards">

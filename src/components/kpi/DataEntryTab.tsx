@@ -30,8 +30,57 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
   const [blockerTarget, setBlockerTarget] = useState<Estimate | null>(null);
   const [unblockerTarget, setUnblockerTarget] = useState<Estimate | null>(null);
 
-  // Filter estimates for this estimator
-  const myEstimates = estimates.filter((e) => e.estimator_id === estimatorId);
+  // Date range filter
+  type DatePreset = 'today' | 'week' | 'month' | 'quarter' | 'custom' | 'all';
+  const [datePreset, setDatePreset] = useState<DatePreset>('week');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+
+  const getDateRangeStart = (preset: DatePreset): Date | null => {
+    const now = new Date();
+    switch (preset) {
+      case 'today':
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      case 'week':
+        const w = new Date(now);
+        w.setDate(w.getDate() - 7);
+        return w;
+      case 'month':
+        const m = new Date(now);
+        m.setDate(m.getDate() - 30);
+        return m;
+      case 'quarter':
+        const q = new Date(now);
+        q.setDate(q.getDate() - 90);
+        return q;
+      case 'all':
+        return null;
+      case 'custom':
+        return customFrom ? new Date(customFrom) : null;
+      default:
+        return null;
+    }
+  };
+
+  const getDateRangeEnd = (): Date | null => {
+    if (datePreset === 'custom' && customTo) {
+      const end = new Date(customTo);
+      end.setHours(23, 59, 59, 999);
+      return end;
+    }
+    return null;
+  };
+
+  // Filter estimates for this estimator + date range
+  const allEstimatorEstimates = estimates.filter((e) => e.estimator_id === estimatorId);
+  const myEstimates = allEstimatorEstimates.filter((e) => {
+    const received = new Date(e.date_received);
+    const start = getDateRangeStart(datePreset);
+    const end = getDateRangeEnd();
+    if (start && received < start) return false;
+    if (end && received > end) return false;
+    return true;
+  });
 
   // ── Helpers ────────────────────────────────────────────────
 
@@ -257,13 +306,52 @@ const DataEntryTab: React.FC<DataEntryTabProps> = ({ estimatorId, estimatorName 
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="space-y-3">
           <CardTitle className="flex items-center justify-between">
             <span>{estimatorName} — Active Estimates</span>
             <span className="text-sm font-normal text-muted-foreground">
-              {myEstimates.length} file{myEstimates.length !== 1 ? 's' : ''}
+              {myEstimates.length} of {allEstimatorEstimates.length} file{allEstimatorEstimates.length !== 1 ? 's' : ''}
             </span>
           </CardTitle>
+          <div className="flex items-center gap-2 flex-wrap">
+            {([
+              ['today', 'Today'],
+              ['week', 'Past Week'],
+              ['month', 'Past Month'],
+              ['quarter', 'Past Quarter'],
+              ['all', 'All Time'],
+              ['custom', 'Custom'],
+            ] as [DatePreset, string][]).map(([key, label]) => (
+              <Button
+                key={key}
+                size="sm"
+                variant={datePreset === key ? 'default' : 'outline'}
+                className={cn('h-7 text-xs', datePreset === key && 'bg-primary text-primary-foreground')}
+                onClick={() => setDatePreset(key)}
+              >
+                {label}
+              </Button>
+            ))}
+            {datePreset === 'custom' && (
+              <div className="flex items-center gap-2 ml-2">
+                <Input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="h-7 w-36 text-xs"
+                  placeholder="From"
+                />
+                <span className="text-muted-foreground text-xs">to</span>
+                <Input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="h-7 w-36 text-xs"
+                  placeholder="To"
+                />
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

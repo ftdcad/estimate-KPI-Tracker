@@ -49,10 +49,10 @@ export function useKPIData(): KPIData {
   return useMemo(() => {
     const estimatorList = profiles.map((p) => p.display_name);
 
-    // Group estimates by estimator key (lowercase, no spaces)
+    // Group estimates by estimator key (lowercase, no spaces — matches legacy getEstimatorKey)
     const estimators: Record<string, EstimateEntry[]> = {};
     for (const p of profiles) {
-      const key = p.user_id;
+      const key = p.display_name.toLowerCase().replace(/\s+/g, '');
       estimators[key] = estimates
         .filter((e) => e.estimator_id === p.user_id)
         .map(estimateToEntry);
